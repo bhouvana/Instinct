@@ -167,6 +167,45 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       that's a real open structural question (noted below), not resolved
       by moving already-validated, already-tested infrastructure on a
       guess about plugin-loading conventions.
+- [x] **Reverse-engineered Ponytail's CI + hooks, adopted what transfers**
+      (incremental, not a big upfront doc — see commit history):
+  - **ADOPT (adapted): `hooks/instinct-activate.js`, a `SessionStart` hook.**
+    Why it exists in Ponytail: description-matching alone can silently
+    fail to load a skill for a given session — a false negative with no
+    error. A `SessionStart` hook sidesteps that non-deterministically-
+    matched path entirely by guaranteeing injection every session. This
+    doesn't replace Gate accuracy (still RFC-0008–0011's job) — it only
+    guarantees the Gate is present to run at all, closing a real gap
+    RFC-0002/ADR-0003 reasoned about but never fully closed. Adapted, not
+    copied: dropped Ponytail's intensity-mode/statusline-nudge layer,
+    since Instinct has no modes to track yet. Verified against
+    `claude-code-guide` for the actual hook I/O contract before writing
+    it, not guessed — and found a real bug in the first version (sync
+    markers leaking into the injected context) via manual testing before
+    it was ever committed. `SubagentStart` was investigated and is
+    **not** used for the equivalent purpose: confirmed it doesn't support
+    context injection (observability/gate use only), so the "paste
+    SKILL.md into every Agent prompt" pattern from RFC-0008 onward remains
+    the correct approach for subagents, not a gap to close.
+  - **ADOPT (adapted): CI workflow** (`.github/workflows/test.yml`) —
+    Python + Node setup, `check_adapters.py`, plugin-manifest JSON
+    validation, `pytest`. Every step verified to actually pass locally
+    before committing, not assumed from the YAML alone.
+  - **ADOPT: `.env.example`** — documents `eval/run.py`'s real env vars.
+    Found and fixed a real gap while adding it: `.env` itself wasn't in
+    `.gitignore` yet.
+  - **REJECT (for now): `scripts/uninstall.js` equivalent.** Ponytail
+    needs one because it installs itself across 25+ heterogeneous hosts
+    with no uniform mechanism. Instinct doesn't have an equivalent
+    "install into an arbitrary target project" flow to begin with — for
+    Claude Code specifically, install/uninstall is already Claude Code's
+    own plugin-manager job now that a real manifest exists. Building
+    uninstall before install is solving half a problem backwards.
+  - **REJECT (for now): `scripts/check-versions.js` equivalent.** Only one
+    file carries a version number right now (`plugin.json`) — there's
+    nothing to drift against yet. A version-sync checker with nothing to
+    check is scaffolding, not verification, the same call already made
+    for `AGENTS.md` before it existed (RFC-0007).
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

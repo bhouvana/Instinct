@@ -1,0 +1,35 @@
+name: test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Check adapter sync (SKILL.md vs. AGENTS.md/.cursor/.windsurf/...)
+        run: python scripts/check_adapters.py
+
+      - name: Validate plugin manifests are well-formed JSON
+        run: |
+          python -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          python -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
+          python -c "import json; json.load(open('hooks/hooks.json'))"
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v

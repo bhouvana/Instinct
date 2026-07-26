@@ -44,8 +44,17 @@ function readStdinWithTimeout(timeoutMs) {
     };
     // Windows PowerShell stdin can hang with nothing to read; never let
     // that block subagent spawning — same detail Ponytail's version
-    // calls out explicitly.
-    const timer = setTimeout(() => finish(null), timeoutMs);
+    // calls out explicitly. Resolving the promise alone isn't enough: a
+    // still-open stdin pipe with active listeners keeps Node's event loop
+    // alive on its own, so the process never actually exits even after
+    // this fallback fires. Confirmed by reproducing the hang (spawning
+    // this hook with a stdin pipe that's never written to or closed) before
+    // adding the explicit destroy() below — the fallback used to resolve
+    // in-process but the hook itself still hung indefinitely.
+    const timer = setTimeout(() => {
+      finish(null);
+      process.stdin.destroy();
+    }, timeoutMs);
     process.stdin.setEncoding("utf8");
     process.stdin.on("data", (chunk) => {
       data += chunk;

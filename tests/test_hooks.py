@@ -113,3 +113,32 @@ def test_subagent_hook_fails_safe_toward_injection_on_bad_stdin():
     result = run_subagent_hook(ROOT, stdin="not json at all", matcher="general-purpose")
     payload = json.loads(result.stdout)
     assert "## The Gate" in payload["hookSpecificOutput"]["additionalContext"]
+
+
+def test_subagent_hook_self_exits_when_stdin_never_closes():
+    """Regression test for a real bug found by reproducing Ponytail's own
+    hooks-windows.test.js scenario (issue #443: a hook must never wait on
+    stdin forever, since some hosts run it in a way that swallows the
+    piped JSON so 'end' never fires). This hook had the same bug: the
+    internal timeout resolved its promise, but a still-open stdin pipe
+    with active listeners keeps Node's event loop alive on its own, so
+    the process itself never exited. Confirmed hanging before adding
+    process.stdin.destroy() to the timeout branch, confirmed fixed after —
+    this test fails (by timing out) if the fix regresses."""
+    proc = subprocess.Popen(
+        ["node", str(SUBAGENT_HOOK)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env={"CLAUDE_PLUGIN_ROOT": str(ROOT), "INSTINCT_SUBAGENT_MATCHER": "general-purpose"},
+        text=True,
+    )
+    try:
+        stdout, _ = proc.communicate(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        pytest.fail("hook hung on open stdin — it would freeze the session")
+    assert proc.returncode == 0
+    payload = json.loads(stdout)
+    assert "## The Gate" in payload["hookSpecificOutput"]["additionalContext"]

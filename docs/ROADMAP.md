@@ -288,6 +288,25 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     is correct today since Instinct's hooks only target Claude Code — this
     is real reference material for the day a Phase-3 host needs it, not a
     gap to close now.
+  - **ADOPT (found and fixed a real bug): `tests/hooks-windows.test.js`'s
+    stdin-never-closes regression test (issue #443 in Ponytail).** Read the
+    test, then reproduced its exact scenario against
+    `hooks/instinct-subagent.js` (spawn with a stdin pipe never written to
+    or closed, with `INSTINCT_SUBAGENT_MATCHER` set so the hook's stdin-read
+    path actually runs) before assuming it applied — it hung indefinitely.
+    Root cause: `readStdinWithTimeout`'s fallback only resolved the
+    internal promise on timeout; it never touched the still-open stdin
+    pipe, and a pipe with active listeners keeps Node's event loop alive
+    on its own regardless of what the application logic thinks is "done."
+    Fixed by calling `process.stdin.destroy()` in the timeout branch
+    alongside resolving the promise. Reproduced hanging before the fix,
+    confirmed exiting at ~1s with correct, untruncated output after it
+    (`hooks/instinct-subagent.js`, `tests/test_hooks.py`
+    `test_subagent_hook_self_exits_when_stdin_never_closes`). This is the
+    kind of bug that only shows up on hosts that don't close stdin
+    promptly — plausible on Windows, per Ponytail's own account of the
+    failure — and would otherwise have shipped silently, since every
+    existing test closed stdin normally and none of them hit this path.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

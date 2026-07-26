@@ -206,6 +206,28 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     nothing to drift against yet. A version-sync checker with nothing to
     check is scaffolding, not verification, the same call already made
     for `AGENTS.md` before it existed (RFC-0007).
+  - **ADOPT (adapted): `hooks/instinct-subagent.js`, a `SubagentStart`
+    hook.** Closes a gap this project had been manually working around
+    all session — a `SessionStart` hook's context is parent-thread only
+    and never reaches Task-spawned subagents, so every evaluation agent
+    since RFC-0008 needed `SKILL.md` pasted into its prompt by hand.
+    Modeled on Ponytail's real `hooks/ponytail-subagent.js` /
+    `ponytail-runtime.js` — reading their actual `writeHookOutput` source
+    directly overturned an earlier, more conservative answer from
+    `claude-code-guide` claiming `SubagentStart` doesn't support context
+    injection. Real, shipped, tested code from a mature project outweighed
+    an uncertain documentation summary. Still honestly flagged: this has
+    only been run standalone via `node`, never observed firing inside an
+    actual live `SubagentStart` event in this environment — residual gap,
+    not claimed as fully verified. Optional `INSTINCT_SUBAGENT_MATCHER`
+    env var scopes injection by agent type; unset by default (injects
+    into every subagent). Fails safe toward injection on unparseable
+    stdin, matching ADR-0006's escalate-on-uncertainty direction —
+    arrived at independently, same as Ponytail's own stated fail-safe
+    logic. `hooks/lib.js` factored out once two hook scripts needed the
+    same SKILL.md-reading logic (dogfooding the project's own
+    "reuse before you add" rule on itself). 9 new/updated tests, all
+    passing.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

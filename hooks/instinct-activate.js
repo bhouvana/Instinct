@@ -22,43 +22,10 @@
  * missing one).
  */
 
-const fs = require("fs");
-const path = require("path");
-
-function stripFrontmatter(text) {
-  if (text.startsWith("---\n")) {
-    const end = text.indexOf("\n---\n", 4);
-    if (end !== -1) return text.slice(end + 5);
-  }
-  return text;
-}
-
-// SKILL.md carries scripts/check_adapters.py's sync markers so the sync
-// checker can find the host-specific block. Those markers are maintenance
-// metadata for that tool, not part of the rules — strip them so they
-// never leak into what the model actually sees.
-function stripSyncMarkers(text) {
-  return text.replace(/<!-- instinct:(?:shared|host-specific):(?:start|end) -->\n?/g, "");
-}
-
-function main() {
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || path.join(__dirname, "..");
-  const skillPath = path.join(pluginRoot, "SKILL.md");
-  const raw = stripFrontmatter(fs.readFileSync(skillPath, "utf8"));
-  const body = stripSyncMarkers(raw).trim();
-
-  process.stdout.write(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "SessionStart",
-        additionalContext: body,
-      },
-    })
-  );
-}
+const { getSkillBody, emitAdditionalContext } = require("./lib");
 
 try {
-  main();
+  emitAdditionalContext("SessionStart", getSkillBody());
 } catch {
   // Silent, deliberate: a broken hook must never block session startup.
 }

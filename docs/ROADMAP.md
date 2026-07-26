@@ -127,9 +127,19 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       the Phase-1/2 sequencing gap once instead of ignoring it. One
       anecdote, not a validated pattern — real Layer 3/4 still needs many
       tasks and human review.
+- [x] **Real-repo pilot, 3 tasks** (`docs/rfcs/0013-real-repo-pilot.md`) —
+      against `tiangolo/full-stack-fastapi-template` (same repo Ponytail's
+      own agentic benchmark uses), one task per pillar (reuse, breaking-
+      change judgment, root-cause fix), verified against real code, not
+      invented bugs. Consistent pattern across all three: Instinct-loaded
+      added a test baseline didn't, plus a real security catch (CSV-
+      injection guard) baseline missed entirely. 3 data points, not a
+      proven property — repeat sampling for Layer 3/4 tasks is still an
+      open methodology gap, same as RFC-0004 Layer 1/2 was before RFC-0009.
 - [ ] RFC-0004 Layers 3/4, properly powered (many tasks, multiple repos,
-      blinded human review, per ADR-0007/0008) — the pilot proved the
-      setup works; it didn't replace the real program. Not started.
+      blinded human review, repeat-sampled, per ADR-0007/0008) — two
+      pilots now (RFC-0012 N=1, RFC-0013 N=3) prove the setup and show a
+      consistent early pattern; neither is the real program. Not started.
 - [ ] RFC-0007 Phase 1 (`AGENTS.md` + one adapter template + sync checker)
       — still sequenced *after* a trustworthy evaluation pass. Three
       rounds of real testing (RFC-0009, RFC-0010, RFC-0011) have found and

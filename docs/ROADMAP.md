@@ -140,14 +140,19 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       blinded human review, repeat-sampled, per ADR-0007/0008) — two
       pilots now (RFC-0012 N=1, RFC-0013 N=3) prove the setup and show a
       consistent early pattern; neither is the real program. Not started.
-- [ ] RFC-0007 Phase 1 (`AGENTS.md` + one adapter template + sync checker)
-      — still sequenced *after* a trustworthy evaluation pass. Three
-      rounds of real testing (RFC-0009, RFC-0010, RFC-0011) have found and
-      fixed two real bugs in `SKILL.md` that didn't exist in anyone's
-      imagination beforehand — exactly the cost-of-correction argument
-      RFC-0007's own Forward Plan made for waiting. `gt-03`/`gt-07` being
-      resolved is encouraging, not sufficient — the full-corpus gap above
-      is still open, and this item waits on it, not on vibes.
+- [x] **RFC-0007 Phase 1** — `AGENTS.md` (canonical body consolidated with
+      inlined Critical-tier detail instead of pointers), `.cursor/rules/instinct.mdc`
+      as the one adapter template (real Cursor `.mdc` frontmatter,
+      `alwaysApply: true`), and `scripts/check_adapters.py` verifying
+      both against `SKILL.md`. The checker was proven both ways, not just
+      run once green: confirmed it catches deliberately introduced drift
+      (a one-word change), then confirmed clean again after reverting.
+      Four rounds of real evaluation (RFC-0008 through 0011) plus two real
+      pilots (RFC-0012, 0013) preceded this, per RFC-0007's own sequencing
+      — this wasn't started until there was real evidence behind it.
+- [ ] RFC-0007 Phase 2 (remaining instruction-tier adapters — Copilot,
+      Windsurf — as thin copies once Phase 1's pattern is proven in real
+      use, not just by the checker passing).
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

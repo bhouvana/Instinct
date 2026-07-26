@@ -22,10 +22,13 @@ bug — a model using "additive... is usually a no" to justify *not*
 escalating the project's own canonical Tier-3 breaking-change example
 (RFC-0010), then confirmed fixed at N=10, unanimous, on a proper re-test
 (RFC-0011). A full-corpus N=3 pass against Ollama is done (cheap: one batch
-call), and a first Layer 3/4 pilot (RFC-0012, N=1) showed a clean, real
-contrast between baseline and Instinct-loaded behavior on this repo's own
-history. The repo itself is now committed (7 commits, phase-based) — see
-`docs/ROADMAP.md` for what's still open.
+call), a first Layer 3/4 pilot (RFC-0012, N=1) against this repo's own
+history, and a second (RFC-0013, 3 tasks) against a real external repo
+(the same one Ponytail's own benchmark uses) — consistent pattern: Instinct
+adds tests baseline skips, plus one real security catch. RFC-0007 Phase 1
+is now built: `AGENTS.md` and a Cursor `.mdc` adapter, kept in sync with
+`SKILL.md` by `scripts/check_adapters.py` (verified to actually catch
+drift, not just pass once). See `docs/ROADMAP.md` for what's still open.
 
 ## What this is
 
@@ -64,10 +67,16 @@ landed.
 ## Project structure
 
 ```
-SKILL.md              the skill itself — read this first if you just want
-                       to know what it does
+SKILL.md              the skill itself, Claude Code-native — read this
+                       first if you just want to know what it does
+AGENTS.md              instruction-tier copy (always-on hosts with no
+                       matching step) — canonical body kept in sync with
+                       SKILL.md by scripts/check_adapters.py (RFC-0007)
+.cursor/rules/          Cursor's copy of the same, real .mdc format
 references/            detail SKILL.md defers to when a Critical-tier
                        request actually needs it
+scripts/
+  check_adapters.py    sync checker for AGENTS.md/.cursor against SKILL.md
 eval/
   corpus/              labeled scenarios (RFC-0005) — what "correct" means,
                        locked before SKILL.md was written (ADR-0009)

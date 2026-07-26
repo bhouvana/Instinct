@@ -71,8 +71,11 @@ fixtures. A decision nothing can falsify is a claim, not engineering.
 
 ## Critical (yes to Q3)
 
+<!-- instinct:host-specific:start -->
 Read `references/ladder.md` before acting, and `references/provenance-out.md`
-before finishing. In brief: reconstruct why the current shape exists before
+before finishing.
+<!-- instinct:host-specific:end -->
+In brief: reconstruct why the current shape exists before
 changing it — if you can't, say so as a finding, not as license to proceed
 blind. State the strongest alternative once, briefly, with its concrete
 tradeoff, then implement whichever the requester confirms, including the

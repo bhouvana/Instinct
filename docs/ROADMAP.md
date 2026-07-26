@@ -253,6 +253,22 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     project's first real runtime dependency (`@modelcontextprotocol/sdk`,
     `zod`) — a cost worth taking only once a concrete host needs it, not
     speculatively. Left for Phase 3 to pick up.
+  - **REJECT (already covered, more strongly): `scripts/check-rule-copies.js`
+    equivalent.** Read it directly: it byte-compares AGENTS.md against each
+    compact rule copy (same idea as `check_adapters.py`), then falls back to
+    a list of hand-picked load-bearing phrase invariants to check that
+    `skills/ponytail/SKILL.md` and `AGENTS.md` haven't silently diverged on
+    wording — a workaround needed because Ponytail's `SKILL.md` and
+    `AGENTS.md` aren't structurally tied together, so they can't be
+    byte-diffed. `check_adapters.py` doesn't have that problem: RFC-0007's
+    `instinct:shared`/`instinct:host-specific` markers make `SKILL.md`'s
+    shared block and every adapter's shared block literally the same text,
+    byte-compared already (`split_shared_and_host_specific` +
+    `shared != skill_shared`). Byte equality is strictly stronger than a
+    hand-picked phrase canary — anything an invariant list could catch, full
+    equality catches too, with no list to keep in sync by hand. Nothing to
+    adopt; confirmed by re-running `check_adapters.py` clean, not just by
+    reading the code.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

@@ -1,0 +1,83 @@
+# Layer 1 corpus (RFC-0004) — trigger precision/recall.
+# Each entry: a request, optional one-line context, and whether the skill
+# is expected to trigger. See docs/rfcs/0005-testing-strategy.md for pass
+# criteria and docs/eval/README.md for governance rules before editing.
+
+- id: trg-01
+  request: "Add a new REST endpoint for exporting user data as CSV."
+  context: null
+  expected_trigger: yes
+  note: >
+    New behavior, real design surface (auth? pagination? format?). Textbook
+    trigger case.
+
+- id: trg-02
+  request: "What does the debounce function in utils/timing.js do?"
+  context: null
+  expected_trigger: no
+  note: >
+    Pure information question, no code change requested. RFC-0002's first
+    skip condition.
+
+- id: trg-03
+  request: "Rename the variable tmp to elapsedMs in this one function, nothing else in scope."
+  context: null
+  expected_trigger: no
+  note: >
+    Fully specified, no room for a different approach — RFC-0002's second
+    skip condition (execution-only), distinct from a triviality judgment.
+
+- id: trg-04
+  request: "Refactor the payment retry logic to use exponential backoff instead of fixed delay."
+  context: null
+  expected_trigger: yes
+  note: "Existing behavior change, real alternative approaches exist."
+
+- id: trg-05
+  request: "Fix the typo in the README: 'recieve' -> 'receive'."
+  context: null
+  expected_trigger: no
+  note: >
+    Fully specified, unambiguous, no decision point. Same skip condition as
+    trg-03, deliberately in a different surface (docs, not code) to check
+    the condition isn't accidentally code-only.
+
+- id: trg-06
+  request: "Why do we have both UserService and UserManager?"
+  context: null
+  expected_trigger: no
+  note: >
+    Provenance-flavored question, but no change is requested. Answering it
+    well is still in the spirit of the project even though the skill itself
+    shouldn't fire — the skill governs decisions about changes, not every
+    question that touches history.
+
+- id: trg-07
+  request: "Add a .env.example file listing required environment variables."
+  context: null
+  expected_trigger: yes
+  note: >
+    New file, additive — expected to trigger broadly per ADR-0003, then
+    Gate-exit fast at Tier 1 (see gate_tier.yaml). Exists to prove the
+    trigger/tier split actually behaves as designed, not just in theory.
+
+- id: trg-08
+  request: "Delete the unused LegacyExporter class, nothing references it anymore."
+  context: null
+  expected_trigger: yes
+  note: "Deletion of an abstraction, explicitly in scope per RFC-0002."
+
+- id: trg-09
+  request: "Bump lodash from 4.17.20 to 4.17.21."
+  context: null
+  expected_trigger: yes
+  note: >
+    Genuinely borderline (patch bump, not a new dependency or design
+    decision). Kept as yes per ADR-0006 (uncertainty escalates); expected
+    to resolve to Tier 1 fast once triggered, not to add real ceremony.
+
+- id: trg-10
+  request: "Should I use Redux or Zustand for state management here?"
+  context: null
+  expected_trigger: yes
+  note: "Explicit alternatives-evaluation request — textbook Judgment case."

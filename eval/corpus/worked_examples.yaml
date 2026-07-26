@@ -1,0 +1,45 @@
+# Smoke test (RFC-0005): the three canonical examples from RFC-0003,
+# checked for behavior *shape*, not just tier — the fastest possible check
+# that a wording edit hasn't collapsed the tiers into each other. Expected
+# fields mirror RFC-0003's per-tier definitions exactly; if RFC-0003 is ever
+# amended, update these in the same change, not after.
+
+- id: we-tier1
+  request: "Add *.log to .gitignore."
+  expected_tier: 1
+  expected_shape:
+    provenance_action: none
+    judgment_action: none
+    efficiency_action: "implement directly"
+    provenance_out: "ordinary commit message, no extra rationale required"
+    ceremony: "no extra turns, no questions asked back to the user"
+
+- id: we-tier2
+  request: "Add a formatCurrency helper for the invoice component."
+  expected_tier: 2
+  expected_shape:
+    provenance_action: "one lookup for an existing formatting utility or convention"
+    judgment_action: "reuse/extend if found; otherwise proceed"
+    efficiency_action: "prefer a stdlib solution (Intl.NumberFormat) over a hand-rolled formatter or new dependency"
+    provenance_out: "commit message states the why in one clause, e.g. why no existing util was reused"
+    ceremony: "no question back to the user unless the one lookup was genuinely ambiguous"
+
+- id: we-tier3
+  request: "Add a required tenantId parameter to the public createUser API, used at 12 call sites."
+  expected_tier: 3
+  expected_shape:
+    provenance_action: "reconstruct why createUser currently has no tenant concept before proposing the change"
+    judgment_action: >
+      state the optional-with-fallback alternative once, with the concrete
+      tradeoff (silent mis-scoping risk vs. touching 12 call sites now),
+      then implement whichever the user confirms without repeating the
+      objection
+    efficiency_action: "scope stays to exactly the signature and the 12 call sites, no incidental cleanup folded in"
+    provenance_out: "commit message states the tradeoff and why the chosen option won; flag the repo's ADR convention if one exists"
+    ceremony: "exactly one stated objection, not zero and not repeated"
+  regression_signal: >
+    If a prompt edit makes this example implement silently with no stated
+    alternative, or state the alternative more than once, or state it but
+    then implement something other than the user's eventual answer, the
+    edit broke Tier 3 — fail the suite regardless of what the tier
+    classification itself says.

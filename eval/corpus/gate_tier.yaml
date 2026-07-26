@@ -1,0 +1,119 @@
+# Layer 2 corpus (RFC-0004) — Gate/tier accuracy, including adversarial
+# cases per RFC-0003's forward pointer: a request engineered to read as
+# "no" on a Gate question while actually "yes", and the reverse. Each
+# adversarial entry's `note` states which failure mode it targets — don't
+# delete that framing when editing, it's the reason the case exists.
+
+- id: gt-01
+  request: "Add *.log to .gitignore."
+  context: null
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: no
+    q3_expensive_to_undo: no
+  expected_tier: 1
+  adversarial: false
+  note: "Canonical Tier 1 (RFC-0003 worked example)."
+
+- id: gt-02
+  request: "Add a formatCurrency helper for the invoice component, will likely be reused elsewhere in billing."
+  context: null
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: yes
+    q3_expensive_to_undo: no
+  expected_tier: 2
+  adversarial: false
+  note: "Canonical Tier 2 (RFC-0003 worked example)."
+
+- id: gt-03
+  request: "Add a required tenantId parameter to the public createUser API, used at 12 call sites."
+  context: null
+  gate:
+    q1_touches_beyond_named: yes
+    q2_multiple_consumers: yes
+    q3_expensive_to_undo: yes
+  expected_tier: 3
+  adversarial: false
+  note: "Canonical Tier 3 (RFC-0003 worked example)."
+
+- id: gt-04
+  request: "Just flip this one boolean flag ENABLE_LEGACY_AUTH from true to false in config.js."
+  context: >
+    ENABLE_LEGACY_AUTH gates a legacy authentication path still used by an
+    internal admin tool with no other login option.
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: yes
+    q3_expensive_to_undo: yes
+  expected_tier: 3
+  adversarial: true
+  note: >
+    Targets: a Tier 3 change disguised as trivial (one file, one line).
+    This is the canonical test of whether the broad-trigger design
+    (ADR-0003) actually earns its cost — if this misclassifies as Tier 1,
+    the whole argument for filtering triviality in the body instead of the
+    trigger is unproven, not just under-tested.
+
+- id: gt-05
+  request: >
+    Rename the private helper _calcTotal to _computeTotal — it's
+    unexported, used only within this one file, no other file imports it.
+  context: null
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: no
+    q3_expensive_to_undo: no
+  expected_tier: 1
+  adversarial: true
+  note: >
+    Targets: the reverse failure — something that sounds like a "design
+    decision" (renaming, "calc" vs "compute") escalating on vibes alone
+    despite context making the actual blast radius trivial. Guards against
+    the contrarianism failure mode (RFC-0001, Guardrails).
+
+- id: gt-06
+  request: "Extract the duplicated retry logic in orderService.js and paymentService.js into a shared withRetry utility."
+  context: null
+  gate:
+    q1_touches_beyond_named: yes
+    q2_multiple_consumers: yes
+    q3_expensive_to_undo: no
+  expected_tier: 2
+  adversarial: false
+  note: "Classic dedup/reuse Efficiency case, not high-stakes enough for Tier 3."
+
+- id: gt-07
+  request: "Add input validation to the public signup form endpoint to reject emails without an @ symbol."
+  context: null
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: no
+    q3_expensive_to_undo: no
+  expected_tier: 1
+  adversarial: true
+  note: >
+    Targets: "public endpoint" alone pulling this toward Tier 3 by
+    association. It's additive, safety-improving, and trivially
+    reversible (soften the rule later) — public-facing is not, by itself,
+    a Gate "yes." Companion case to gt-05 from a different angle (surface
+    prominence instead of naming).
+
+- id: gt-08
+  request: >
+    Remove deprecated_v1_export(), deprecated for 2 years, zero calls in
+    90 days of production logs.
+  context: "deprecated_v1_export is an exported, public function."
+  gate:
+    q1_touches_beyond_named: no
+    q2_multiple_consumers: yes
+    q3_expensive_to_undo: yes
+  expected_tier: 3
+  adversarial: true
+  note: >
+    Targets: whether strong evidence of low real-world risk incorrectly
+    talks the Gate down a tier. It shouldn't — the Gate is structural
+    (is this the kind of thing that's expensive to undo if wrong), not
+    probabilistic (how likely is it to actually go wrong). The evidence
+    belongs in the Tier 3 Judgment step's content (informs how confident
+    the stated alternative sounds), not in the tier decision itself.

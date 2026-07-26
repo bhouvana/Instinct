@@ -1,0 +1,3 @@
+pyyaml
+# anthropic is only needed for `--backend api`; the stub backend has no
+# dependency beyond pyyaml. Install separately: pip install anthropic

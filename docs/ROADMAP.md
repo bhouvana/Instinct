@@ -269,6 +269,25 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     equality catches too, with no list to keep in sync by hand. Nothing to
     adopt; confirmed by re-running `check_adapters.py` clean, not just by
     reading the code.
+  - **REJECT (mode-tracking hook family): `hooks/ponytail-config.js`,
+    `ponytail-instructions.js`, `ponytail-mode-tracker.js`,
+    `ponytail-runtime.js`.** Read all four directly. Together they resolve
+    a default mode (env var → config file → `full`), track which
+    `off`/`lite`/`full`/`ultra`/`review` mode a session is in via a flag
+    file, and filter `SKILL.md`'s body down to the active mode's rows
+    before injecting it. Same ADR-0004 reasoning as the statusline reject:
+    there is no mode state in Instinct for any of this to track or filter.
+    One piece is worth flagging, not adopting, for whoever eventually
+    works RFC-0007 Phase 3: `ponytail-runtime.js`'s `writeHookOutput`
+    sniffs `COPILOT_PLUGIN_DATA`/`PLUGIN_DATA`/`QODER_SESSION_ID` env vars
+    and shapes its JSON differently per host (Copilot wants
+    `additionalContext` only on `SessionStart`; Codex wants a
+    `systemMessage` plus `hookSpecificOutput`; Qoder wants
+    `hookSpecificOutput` without `systemMessage`). `hooks/lib.js`'s
+    `emitAdditionalContext` only knows the native-Claude-Code shape, which
+    is correct today since Instinct's hooks only target Claude Code — this
+    is real reference material for the day a Phase-3 host needs it, not a
+    gap to close now.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

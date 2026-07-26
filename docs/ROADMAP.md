@@ -228,6 +228,31 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     same SKILL.md-reading logic (dogfooding the project's own
     "reuse before you add" rule on itself). 9 new/updated tests, all
     passing.
+  - **REJECT: `hooks/ponytail-statusline.sh`/`.ps1` equivalent.** Read
+    both scripts directly: they render `[PONYTAIL]` or `[PONYTAIL:MODE]`
+    in the terminal statusline by reading a flag file that tracks which
+    *intensity mode* (`lite`/`full`/`ultra`) the user has switched the
+    session into via `/ponytail`. That flag file, and the mode concept it
+    displays, doesn't exist in Instinct and isn't a gap to fill — ADR-0004
+    already chose one ambient skill with no user-selected intensity levels
+    for v1, the same reason `instinct-activate.js`'s docstring gave for
+    dropping this layer when the SessionStart hook was adapted. There is
+    no state for a statusline to show. Revisit only if/when Instinct grows
+    actual modes, not before.
+  - **DEFER (not reject): `ponytail-mcp/` equivalent.** Read `index.js`
+    and its README: it's a real, generalizable answer to a problem
+    Ponytail's docs name directly — MCP hosts whose *only* injection point
+    is the prompt/tool menu, with no file-based rule mechanism and no
+    hook lifecycle to piggyback on. That problem is real for Instinct too,
+    but it's specifically the problem RFC-0007 Phase 3 (plugin-tier
+    compatibility beyond Claude Code — Codex and others) already named and
+    explicitly left unresolved, not a new discovery. Building the server
+    now, ahead of deciding *which* hosts actually need it, would invert
+    this project's own sequencing rule (mechanism after the RFC that
+    justifies it, not before — see ADR-0012). It would also be this
+    project's first real runtime dependency (`@modelcontextprotocol/sdk`,
+    `zod`) — a cost worth taking only once a concrete host needs it, not
+    speculatively. Left for Phase 3 to pick up.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

@@ -106,8 +106,12 @@ run Instinct-unaware). Two companion skills (`skills/instinct-review`,
 
 `docs/ROADMAP.md`'s open items are the real todo list — don't duplicate it
 here, it changes too fast for this file to track. As of this commit, the
-honest gaps are: no properly-powered Claude-side Layer 1/2 corpus pass, no
-properly-powered Layer 3/4 program (two pilots, not the real thing), and
-whichever Ponytail mechanism hasn't been reverse-engineered yet (statusline
-script and an MCP-server equivalent were identified and not yet built,
-last session).
+honest gaps are: no properly-powered Claude-side Layer 1/2 corpus pass, and
+no properly-powered Layer 3/4 program (two pilots, not the real thing).
+
+The two remaining Ponytail mechanisms (statusline script, MCP-server
+equivalent) have now been read and closed out, not left open: statusline
+is a REJECT (it visualizes an intensity-mode concept ADR-0004 already
+chose not to have); the MCP server is a DEFER tied to RFC-0007 Phase 3
+(plugin-tier hosts beyond Claude Code), not built speculatively ahead of
+that RFC. See `docs/ROADMAP.md`'s hooks/CI bullet list for the reasoning.

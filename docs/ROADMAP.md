@@ -150,13 +150,34 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       Four rounds of real evaluation (RFC-0008 through 0011) plus two real
       pilots (RFC-0012, 0013) preceded this, per RFC-0007's own sequencing
       — this wasn't started until there was real evidence behind it.
-- [ ] RFC-0007 Phase 2 (remaining instruction-tier adapters — Copilot,
-      Windsurf — as thin copies once Phase 1's pattern is proven in real
-      use, not just by the checker passing).
+- [x] **RFC-0007 Phase 2** — Windsurf, Kiro, Cline, GitHub Copilot added as
+      thin, generated (not hand-typed) copies via `scripts/generate_adapters.py`,
+      verified in sync by `check_adapters.py` (6 adapters total now).
+      `.claude-plugin/plugin.json` + `marketplace.json` make this a real,
+      installable Claude Code plugin, not just a loose `SKILL.md`.
+- [x] **Real test suite** (`tests/`, pytest, 16 tests) for the tooling
+      itself — `check_adapters.py` and `eval/run.py`. Found and fixed a
+      real bug while writing it: the checker crashed instead of reporting
+      cleanly when a path wasn't under repo root.
+- [x] **Companion skills** — `skills/instinct-review` (audit an
+      already-made diff against the Gate) and `skills/instinct-help`
+      (quick reference), explicit-invocation only, matching Ponytail's
+      review/help pattern. Root `SKILL.md` deliberately left where it is
+      rather than moved under `skills/instinct/` to match convention —
+      that's a real open structural question (noted below), not resolved
+      by moving already-validated, already-tested infrastructure on a
+      guess about plugin-loading conventions.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten
 
+- Whether root-level `SKILL.md` should move to `skills/instinct/SKILL.md`
+  to match the multi-skill layout `skills/instinct-review` and
+  `skills/instinct-help` now use (and the layout Ponytail itself uses
+  throughout — it has no root SKILL.md at all). Not done now: unconfirmed
+  whether Claude Code's plugin loader actually requires this, and moving
+  already-validated infrastructure on a guess is exactly the kind of
+  needless-blast-radius change this project argues against.
 - RFC-0007 Phase 3: plugin-tier compatibility beyond Claude Code (Codex and
   others, per Ponytail's own host taxonomy), and whether the single-
   ambient-skill choice (ADR-0004) still holds once other plugin-tier hosts

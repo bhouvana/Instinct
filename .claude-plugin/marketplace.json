@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "instinct",
+  "description": "Engineering is not writing code. Engineering is making good decisions.",
+  "owner": {
+    "name": "Instinct Project Contributors"
+  },
+  "plugins": [
+    {
+      "name": "instinct",
+      "description": "Provenance, Judgment, and Efficiency before implementation — the Gate and its tiers, compiled from docs/rfcs.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

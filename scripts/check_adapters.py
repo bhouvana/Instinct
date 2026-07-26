@@ -35,6 +35,10 @@ SKILL_PATH = ROOT / "SKILL.md"
 ADAPTERS = [
     (ROOT / "AGENTS.md", True),
     (ROOT / ".cursor" / "rules" / "instinct.mdc", True),
+    (ROOT / ".windsurf" / "rules" / "instinct.md", True),
+    (ROOT / ".kiro" / "steering" / "instinct.md", True),
+    (ROOT / ".clinerules" / "instinct.md", True),
+    (ROOT / ".github" / "copilot-instructions.md", True),
 ]
 
 HOST_SPECIFIC_RE = re.compile(
@@ -78,6 +82,16 @@ def diff(label_a: str, a: str, label_b: str, b: str) -> str:
     )
 
 
+def _label(path: Path) -> str:
+    """Path relative to ROOT for a tidy report, or the raw path if it isn't
+    under ROOT (e.g. a test pointing at a tmp_path fixture) — reporting
+    should never crash just because a path came from somewhere unexpected."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
     skill_body = strip_frontmatter(SKILL_PATH.read_text(encoding="utf-8"))
     skill_shared, skill_host_specific = split_shared_and_host_specific(skill_body)
@@ -87,17 +101,17 @@ def main() -> int:
 
     for path, is_consolidated in ADAPTERS:
         if not path.exists():
-            problems.append(f"{path.relative_to(ROOT)}: registered but missing")
+            problems.append(f"{_label(path)}: registered but missing")
             continue
         text = strip_frontmatter(path.read_text(encoding="utf-8"))
         shared, host_specific = split_shared_and_host_specific(text)
 
         if shared != skill_shared:
-            d = diff("SKILL.md (shared)", skill_shared, str(path.relative_to(ROOT)), shared)
-            problems.append(f"{path.relative_to(ROOT)}: shared content drifted from SKILL.md\n{d}")
+            d = diff("SKILL.md (shared)", skill_shared, _label(path), shared)
+            problems.append(f"{_label(path)}: shared content drifted from SKILL.md\n{d}")
 
         if is_consolidated and host_specific:
-            consolidated_host_specific.append((str(path.relative_to(ROOT)), host_specific))
+            consolidated_host_specific.append((_label(path), host_specific))
 
     # Consolidated adapters must agree with each other on the inlined
     # Critical-tier content, even though they're expected to differ from

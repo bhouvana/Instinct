@@ -8,27 +8,17 @@ not a checklist you have to invoke.
 
 ## Status
 
-Pre-alpha. Design (RFC-0001 through RFC-0005, RFC-0007) is locked.
-`SKILL.md` has been hardened four times past the version RFC-0006
-originally audited, the last two from real repeat-sampled evaluation, not
-single-pass checks: reading Ponytail's own instruction text (ADR-0011); an
-independent model finding a real Gate bug (public surfaces misreading as
-automatically Critical — RFC-0008); a full 18-scenario corpus run against a
-live external backend, Ollama Cloud's `gpt-oss:120b`, that mostly exposed
-*that backend's* non-determinism rather than the skill (RFC-0009); and,
-after adding proper `--samples N` majority-vote support to the harness,
-finding that the RFC-0008 fix's own wording had created a second, opposite
-bug — a model using "additive... is usually a no" to justify *not*
-escalating the project's own canonical Tier-3 breaking-change example
-(RFC-0010), then confirmed fixed at N=10, unanimous, on a proper re-test
-(RFC-0011). A full-corpus N=3 pass against Ollama is done (cheap: one batch
-call), a first Layer 3/4 pilot (RFC-0012, N=1) against this repo's own
-history, and a second (RFC-0013, 3 tasks) against a real external repo
-(the same one Ponytail's own benchmark uses) — consistent pattern: Instinct
-adds tests baseline skips, plus one real security catch. RFC-0007 Phase 1
-is now built: `AGENTS.md` and a Cursor `.mdc` adapter, kept in sync with
-`SKILL.md` by `scripts/check_adapters.py` (verified to actually catch
-drift, not just pass once). See `docs/ROADMAP.md` for what's still open.
+Pre-alpha, but functional. Design (RFC-0001–0007) is locked. `SKILL.md` has
+survived four rounds of real, repeat-sampled evaluation (two real bugs
+found and fixed, not hypothesized) and two real-repo pilots showing a
+consistent pattern against baseline. Distributed to six hosts (Claude
+Code, Cursor, Windsurf, Kiro, Cline, Copilot) via a canonical body kept in
+sync by a checker that's been proven to actually catch drift. Installable
+as a real Claude Code plugin. Has a companion skill for reviewing
+already-made changes and one for quick reference. Has a real pytest suite
+for its own tooling. Full history in `docs/rfcs/`; what's still open is in
+`docs/ROADMAP.md` — full Claude-side Layer 1/2 corpus coverage and a
+properly powered Layer 3/4 program are the two honest gaps.
 
 ## What this is
 
@@ -69,14 +59,22 @@ landed.
 ```
 SKILL.md              the skill itself, Claude Code-native — read this
                        first if you just want to know what it does
-AGENTS.md              instruction-tier copy (always-on hosts with no
-                       matching step) — canonical body kept in sync with
-                       SKILL.md by scripts/check_adapters.py (RFC-0007)
-.cursor/rules/          Cursor's copy of the same, real .mdc format
+AGENTS.md              canonical instruction-tier body — Critical-tier
+                       detail consolidated (inlined), not pointed to,
+                       for hosts with no matching step (RFC-0007)
+.cursor/ .windsurf/ .kiro/ .clinerules/ .github/copilot-instructions.md
+                       thin per-host copies of AGENTS.md, generated (not
+                       hand-typed) by scripts/generate_adapters.py
+.claude-plugin/        real Claude Code plugin manifest
+skills/
+  instinct-review/     audit an already-made diff against the Gate
+  instinct-help/       quick reference — explicit invocation, not ambient
 references/            detail SKILL.md defers to when a Critical-tier
                        request actually needs it
 scripts/
-  check_adapters.py    sync checker for AGENTS.md/.cursor against SKILL.md
+  check_adapters.py    sync checker — all adapters vs. SKILL.md
+  generate_adapters.py regenerates the plain-markdown adapters from AGENTS.md
+tests/                 pytest suite for the tooling itself (16 tests)
 eval/
   corpus/              labeled scenarios (RFC-0005) — what "correct" means,
                        locked before SKILL.md was written (ADR-0009)

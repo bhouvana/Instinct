@@ -284,5 +284,22 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
   others, per Ponytail's own host taxonomy), and whether the single-
   ambient-skill choice (ADR-0004) still holds once other plugin-tier hosts
   are in scope. Not resolved by RFC-0007 itself.
+  **Narrowing finding, not a resolution**: read Ponytail's own
+  `docs/agent-portability.md` (its host-compatibility matrix) directly.
+  Most of its "beyond Claude Code" row entries — Antigravity, CodeWhale,
+  Swival, the VS Code Codex extension, JetBrains Junie, Amp, Jules, Zed,
+  and "generic agents" — need *no dedicated adapter at all*: they just read
+  `AGENTS.md` from the repo root as instruction-tier context, which
+  Instinct already ships (RFC-0007 Phase 1). So Instinct is very likely
+  already compatible with all of those, for free, unverified only because
+  none of those hosts have been run against this repo — that's a cheap
+  verification task, not a build task. What Phase 3 actually still owns is
+  narrower than "beyond Claude Code" suggested: only the hosts needing a
+  bespoke plugin manifest or hook/lifecycle wiring the way Claude Code got
+  in Phase 1/2 — Codex, OpenCode, pi, Hermes Agent, Gemini CLI, GitHub
+  Copilot CLI, Qoder. Still not started, and still properly a job for an
+  RFC (which of those hosts are worth the bespoke work) before code, per
+  this project's own sequencing rule — but the scope is now known to be
+  smaller than previously stated.
 - A dedicated Tier-1 maxim for Judgment or Efficiency (considered and
   deferred in ADR-0002 as a mechanism-design question, not a philosophy one).

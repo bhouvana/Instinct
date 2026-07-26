@@ -21,9 +21,11 @@ finding that the RFC-0008 fix's own wording had created a second, opposite
 bug — a model using "additive... is usually a no" to justify *not*
 escalating the project's own canonical Tier-3 breaking-change example
 (RFC-0010), then confirmed fixed at N=10, unanimous, on a proper re-test
-(RFC-0011). A full-corpus N=3 pass against Ollama (cheap: one batch call,
-not per-scenario agent spawns) is also done — see `docs/ROADMAP.md` for
-what it did and didn't settle, and what's still open.
+(RFC-0011). A full-corpus N=3 pass against Ollama is done (cheap: one batch
+call), and a first Layer 3/4 pilot (RFC-0012, N=1) showed a clean, real
+contrast between baseline and Instinct-loaded behavior on this repo's own
+history. The repo itself is now committed (7 commits, phase-based) — see
+`docs/ROADMAP.md` for what's still open.
 
 ## What this is
 

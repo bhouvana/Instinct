@@ -119,9 +119,17 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       Anthropic key is available — would replace ad hoc Agent-tool spot
       checks with the automated, repeatable path `eval/run.py` was built
       for.
-- [ ] RFC-0004 Layers 3/4 (real agentic sessions, human review) — needs
-      full-corpus Layer 1/2 coverage above plus real repositories, per
-      ADR-0007. Not started.
+- [x] **Layer 3/4 pilot, N=1** (`docs/rfcs/0012-layer34-pilot.md`) — one
+      task, run twice (baseline vs. Instinct-loaded) in isolated worktrees
+      against this repo's own now-real history. Clean contrast: baseline
+      wrote a plausible file; Instinct-loaded found RFC-0007's specific
+      prior design (consolidation not pointers), matched it, and flagged
+      the Phase-1/2 sequencing gap once instead of ignoring it. One
+      anecdote, not a validated pattern — real Layer 3/4 still needs many
+      tasks and human review.
+- [ ] RFC-0004 Layers 3/4, properly powered (many tasks, multiple repos,
+      blinded human review, per ADR-0007/0008) — the pilot proved the
+      setup works; it didn't replace the real program. Not started.
 - [ ] RFC-0007 Phase 1 (`AGENTS.md` + one adapter template + sync checker)
       — still sequenced *after* a trustworthy evaluation pass. Three
       rounds of real testing (RFC-0009, RFC-0010, RFC-0011) have found and

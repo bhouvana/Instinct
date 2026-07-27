@@ -44,9 +44,12 @@ plugin (`.claude-plugin/`). Hooks: `SessionStart`
 independent of skill-matching), `SubagentStart`
 (`hooks/instinct-subagent.js`, closes the gap where subagents otherwise
 run Instinct-unaware), and Qoder's `UserPromptSubmit`/`PreToolUse`
-equivalents (Qoder has no `SessionStart` event). Two companion skills
-(`skills/instinct-review`, `skills/instinct-help`), explicit-invocation
-only.
+equivalents (Qoder has no `SessionStart` event). Four companion skills —
+`instinct-review` (audit one diff), `instinct-audit` (the same question
+at repo/history scale), `instinct-debt` (harvest `instinct:` markers),
+`instinct-help` (quick reference) — all explicit-invocation only, living
+under `skills/` alongside the ambient `instinct` skill itself (`SKILL.md`
+moved to `skills/instinct/SKILL.md` this session, see below).
 
 RFC-0007 Phase 3 (plugin-tier hosts beyond Claude Code) is built, not
 deferred anymore — done on direct instruction overriding this project's
@@ -63,9 +66,10 @@ a pi editor extension (`pi-extension/`), and a Hermes Agent plugin (root
 `plugin.yaml` + `__init__.py`). Every one of these was verified by actually
 running it (spawning the process, invoking the exported hooks with a mock
 host object, or a real SDK client), not just written and assumed correct.
-40 tests total now, including `instinct-mcp/test/` and `pi-extension/test/`
+84 tests total now, including `instinct-mcp/test/` and `pi-extension/test/`
 alongside the main pytest suite (`tests/`, run via
-`.github/workflows/test.yml`).
+`.github/workflows/test.yml`, or in one local shot via
+`scripts/test_all.py`).
 
 ## Non-obvious things that will save you time
 
@@ -135,29 +139,22 @@ alongside the main pytest suite (`tests/`, run via
 ## Where to actually look next
 
 `docs/ROADMAP.md`'s open items are the real todo list — don't duplicate it
-here, it changes too fast for this file to track. As of this commit, the
-honest gaps are: no properly-powered Claude-side Layer 1/2 corpus pass, and
-no properly-powered Layer 3/4 program (two pilots, not the real thing).
+here, it changes too fast for this file to track. Every Ponytail mechanism
+worth examining has now been read and given an explicit ADOPT/ADAPT/
+REJECT/DEFER call (see ROADMAP's "engineering-parity sweep" entries);
+don't re-derive one from scratch before checking there first. Same for
+this session's own new tooling — it was turned back on itself once
+(ROADMAP's "self-audit" entry) and real gaps were found and closed, so
+that's a real, not rhetorical, standard to keep holding new work to.
 
-A full reverse-engineering pass over Ponytail happened before the Phase 3
-build: statusline (reject, no mode concept), the mode-tracking hook family
-(reject, its output-contract nugget later adopted for real in Copilot's
-branch), `check-rule-copies.js` (already covered, more strongly),
-OpenClaw/ClawHub (reject, no presence there). One real find came out of
-that pass: reproducing Ponytail's own `hooks-windows.test.js`
-stdin-never-closes scenario against `hooks/instinct-subagent.js` found a
-genuine hang bug (an open stdin pipe kept Node's event loop alive even
-after the internal timeout resolved) — fixed with `process.stdin.destroy()`,
-regression-tested. Its command-syntax checks were also ported wholesale
-into `tests/test_hooks_json.py`.
-
-Everything that pass had deferred pending an RFC (the MCP server, Gemini,
-Codex, Copilot CLI, Qoder, OpenCode, pi, Hermes) was then built anyway on
-direct instruction — see `docs/ROADMAP.md`'s "RFC-0007 Phase 3" entry for
-what shipped and how each piece was actually verified, not just written.
-What's left of Ponytail's own surface: its benchmark/eval tooling, which
-is out of scope here. What's left overall: the two big properly-powered
-evaluation programs (Claude-side Layer 1/2 corpus, Layer 3/4) noted above,
-untouched by this pass, and the still-open question of whether ADR-0004's
-single-ambient-skill choice holds now that several plugin-tier hosts
-actually exist (no real user feedback yet either way).
+As of this commit, the honest gaps are still the two that have been true
+for a while: no properly-powered Claude-side Layer 1/2 corpus pass, and no
+properly-powered Layer 3/4 program (individual verified findings keep
+accumulating in `docs/known-failure-modes.md`, which is real evidence, but
+not the same thing as a properly-powered program). Newer, smaller open
+questions: whether real Claude Code actually loads the skill correctly
+from its new `skills/instinct/SKILL.md` location (inferred from Ponytail's
+own layout, not run against real Claude Code from this environment), and
+whether ADR-0004's single-ambient-skill bet still holds now that the
+skill family has grown to four and plugin-tier hosts actually exist —
+no real user feedback exists yet either way.

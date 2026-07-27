@@ -681,7 +681,22 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     changed trust boundary) and check whether each one actually left the
     provenance `SKILL.md`'s Critical tier obligates — a tradeoff stated, an
     alternative named, a verification artifact — rather than just having
-    happened.
+    happened. **Verified by actually applying it, not just written and
+    trusted**: hand-ran its checklist against this repo's own real commits
+    right after writing it. Found a real gap immediately — none of the
+    four original bullets would catch a change to `SKILL.md`'s own rule
+    text (the commit that fixed Q2's wording, arguably the single most
+    consequential change in this entire project's history, since it
+    changes classification behavior across every host), because they were
+    all code-centric (functions, parameters, files). Added a fifth bullet
+    naming "a change to a canonical rule/prompt/policy text other files or
+    hosts derive from" explicitly. Re-checked against three real commits
+    after the fix: the Q2-wording commit and the `SKILL.md`-move commit
+    both correctly qualify and both correctly show good provenance and
+    verification (true negatives, not missed findings); an unrelated
+    additive commit (`instinct-mcp`'s addition) correctly does *not*
+    qualify, confirming the checklist doesn't over-fire on ordinary
+    non-breaking work either.
   - **No `instinct-gain` equivalent, and none is planned.** Ponytail's
     version is a scoreboard pulled from its own real benchmark suite (LOC
     reduction, cost, speed across real runs). Instinct has deliberately

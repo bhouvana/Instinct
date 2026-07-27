@@ -22,6 +22,16 @@ user names) whose diff shows any of:
   with more than one caller
 - a deleted file, module, or dependency that other code imported
 - a changed trust-boundary surface (auth, payment, deletion, data access)
+- **a change to a canonical rule/prompt/policy text that other files or
+  hosts derive from** (this project's own `SKILL.md`; equally, a shared
+  ESLint config, a schema other services validate against, an IaC module
+  other stacks import) — easy to miss because the diff is "just words" or
+  "just config," but the blast radius is every consumer of that text, not
+  the file itself. Found by actually running this checklist against this
+  project's own history: the commit tightening `SKILL.md`'s Q2 wording
+  changes classification behavior across every host this project ships
+  to, which is a bigger blast radius than most of the literal
+  code-function bullets above, and none of them would have caught it.
 
 ## What to check for each one
 

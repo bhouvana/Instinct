@@ -20,9 +20,12 @@ Gemini CLI, OpenCode, the pi editor, and Hermes Agent, and an MCP server
 as a real Claude Code plugin. Has a companion skill for reviewing
 already-made changes and one for quick reference. Has a real pytest suite
 for its own tooling, plus Node test suites for `instinct-mcp/` and
-`pi-extension/`. Full history in `docs/rfcs/`; what's still open is in
-`docs/ROADMAP.md` — full Claude-side Layer 1/2 corpus coverage and a
-properly powered Layer 3/4 program are the two honest gaps.
+`pi-extension/`. See `docs/installation.md` for how to actually set up
+each host — confirmed-vs-inferred, since not every one has been run
+against real host software from this environment. Full history in
+`docs/rfcs/`; what's still open is in `docs/ROADMAP.md` — full Claude-side
+Layer 1/2 corpus coverage and a properly powered Layer 3/4 program are the
+two honest gaps.
 
 ## What this is
 

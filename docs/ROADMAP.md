@@ -239,7 +239,7 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     dropping this layer when the SessionStart hook was adapted. There is
     no state for a statusline to show. Revisit only if/when Instinct grows
     actual modes, not before.
-  - **DEFER (not reject): `ponytail-mcp/` equivalent.** Read `index.js`
+  - **DEFER (not reject) — superseded, see "RFC-0007 Phase 3" below: `ponytail-mcp/` equivalent.** Read `index.js`
     and its README: it's a real, generalizable answer to a problem
     Ponytail's docs name directly — MCP hosts whose *only* injection point
     is the prompt/tool menu, with no file-based rule mechanism and no
@@ -277,14 +277,15 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     file, and filter `SKILL.md`'s body down to the active mode's rows
     before injecting it. Same ADR-0004 reasoning as the statusline reject:
     there is no mode state in Instinct for any of this to track or filter.
-    One piece is worth flagging, not adopting, for whoever eventually
-    works RFC-0007 Phase 3: `ponytail-runtime.js`'s `writeHookOutput`
-    sniffs `COPILOT_PLUGIN_DATA`/`PLUGIN_DATA`/`QODER_SESSION_ID` env vars
+    One piece was flagged here, not adopted at the time, and has since
+    been adopted for real (see "RFC-0007 Phase 3" below):
+    `ponytail-runtime.js`'s `writeHookOutput` sniffs
+    `COPILOT_PLUGIN_DATA`/`PLUGIN_DATA`/`QODER_SESSION_ID` env vars
     and shapes its JSON differently per host (Copilot wants
     `additionalContext` only on `SessionStart`; Codex wants a
     `systemMessage` plus `hookSpecificOutput`; Qoder wants
     `hookSpecificOutput` without `systemMessage`). `hooks/lib.js`'s
-    `emitAdditionalContext` only knows the native-Claude-Code shape, which
+    `emitAdditionalContext` only knew the native-Claude-Code shape, which
     is correct today since Instinct's hooks only target Claude Code — this
     is real reference material for the day a Phase-3 host needs it, not a
     gap to close now.
@@ -349,6 +350,74 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     Ponytail that isn't a Phase-3-gated host plugin or its own benchmark/eval
     tooling (out of scope here) has now been read and given an explicit
     ADOPT/ADAPT/REJECT/DEFER call.
+- [x] **RFC-0007 Phase 3 — built without waiting for an RFC.** This project's
+      own sequencing rule (mechanism after the RFC that justifies it — the
+      basis for every DEFER call recorded above) was explicitly overridden by
+      direct instruction: told to build the deferred hosts and the MCP server
+      now rather than wait. Reasoning recorded here in place of a dedicated
+      RFC, per the same "brief record, not a full ADR for every one" standard
+      already used throughout this log:
+  - `gemini-extension.json` — zero new code, points `contextFileName` at the
+    `AGENTS.md` Instinct already ships.
+  - `.codex-plugin/plugin.json` — reuses `hooks/hooks.json` unchanged.
+    Confirmed from Ponytail's own manifests that Claude Code and Codex share
+    one hook contract; no new script or output branch needed.
+  - GitHub Copilot CLI (`.github/plugin/`, `hooks/copilot-hooks.json`) — the
+    one host needing a real code change: its contract wants
+    `additionalContext` unwrapped and only on `SessionStart`, confirmed from
+    Ponytail's `ponytail-runtime.js`. Added an `isCopilot` branch to
+    `hooks/lib.js`'s `emitAdditionalContext` (env var `COPILOT_PLUGIN_DATA`),
+    the nugget flagged and left unbuilt in the mode-tracking-family reject
+    above, now actually adopted.
+  - Qoder (`.qoder-plugin/`, `hooks/qoder-hooks.json`,
+    `hooks/instinct-qoder-activate.js`, `.qoder/rules/instinct.md`) — the one
+    host with no `SessionStart` event at all. Added a `UserPromptSubmit`
+    hook that re-injects the Gate every prompt (no reliable session-boundary
+    signal exists to do it only once — same tradeoff Ponytail's own
+    mode-tracker accepts for this host) and reused `instinct-subagent.js`
+    unchanged for the `PreToolUse`-matched subagent-equivalent path,
+    confirmed safe from Ponytail's actual `ponytail-subagent.js` (it
+    hardcodes `'SubagentStart'` as the output label regardless of the real
+    triggering event). Also generated `.qoder/rules/instinct.md` as a proper
+    adapter via `generate_adapters.py`/`check_adapters.py`, since the plugin
+    manifest referenced a rules directory that didn't exist yet — now 7
+    adapters in sync, not 6.
+  - `instinct-mcp/` — the MCP server itself, the mechanism this project had
+    called its "first real runtime dependency" as a reason to wait
+    (`@modelcontextprotocol/sdk`, `zod`). Adapted from `ponytail-mcp/`: one
+    prompt (`instinct`) and one tool (`instinct_instructions`), no mode
+    argument since there's nothing to select between. `npm audit` flags a
+    moderate transitive advisory in the SDK's optional HTTP transport
+    (`@hono/node-server` path traversal on Windows) — not reachable here,
+    since this server only ever uses `StdioServerTransport`. Verified
+    end-to-end with the real `@modelcontextprotocol/sdk` client (not a
+    hand-rolled JSON-RPC harness), spawning the actual server over stdio and
+    calling both the prompt and the tool.
+  - `.opencode/plugins/instinct.mjs` + root `opencode.json` — injects the
+    Gate every turn via `experimental.chat.system.transform` and registers
+    `skills/`. Verified by invoking the plugin's exported hooks directly
+    with a mock host object: no duplicate skill-path registration across
+    repeated `config()` calls, and the system-prompt transform correctly
+    appends to (not replaces) an existing prompt.
+  - `pi-extension/` — the smallest of the bunch once mode state, the
+    status-bar indicator, and `/ponytail-*` command aliases were dropped
+    (none apply here — pi already reads `skills/` directly per Ponytail's
+    own `docs/agent-portability.md`). Verified the same way as the OpenCode
+    plugin, with a mock `pi` host object, including the null-event edge
+    case Ponytail's own extension guards against.
+  - Root `plugin.yaml` + `__init__.py` — the Hermes Agent plugin. Same
+    `register(ctx)` contract as Ponytail's, with mode state and gateway
+    slash-command rewriting dropped. `provides_skills` lists
+    `instinct-review`/`instinct-help` (the directories that actually exist
+    under `skills/`), not `instinct` itself, since the root Gate lives at
+    `SKILL.md` rather than `skills/instinct/` — the still-open structural
+    question noted below. Verified with real Python execution via
+    `importlib`, including that `register()` wires exactly the right skill
+    names and hook onto a mock `ctx`.
+
+  40 tests pass across the whole suite (`tests/`, `instinct-mcp/test/`,
+  `pi-extension/test/`) after this phase, all added or extended in this
+  pass, not carried over unchanged.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten
@@ -360,26 +429,10 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
   whether Claude Code's plugin loader actually requires this, and moving
   already-validated infrastructure on a guess is exactly the kind of
   needless-blast-radius change this project argues against.
-- RFC-0007 Phase 3: plugin-tier compatibility beyond Claude Code (Codex and
-  others, per Ponytail's own host taxonomy), and whether the single-
-  ambient-skill choice (ADR-0004) still holds once other plugin-tier hosts
-  are in scope. Not resolved by RFC-0007 itself.
-  **Narrowing finding, not a resolution**: read Ponytail's own
-  `docs/agent-portability.md` (its host-compatibility matrix) directly.
-  Most of its "beyond Claude Code" row entries — Antigravity, CodeWhale,
-  Swival, the VS Code Codex extension, JetBrains Junie, Amp, Jules, Zed,
-  and "generic agents" — need *no dedicated adapter at all*: they just read
-  `AGENTS.md` from the repo root as instruction-tier context, which
-  Instinct already ships (RFC-0007 Phase 1). So Instinct is very likely
-  already compatible with all of those, for free, unverified only because
-  none of those hosts have been run against this repo — that's a cheap
-  verification task, not a build task. What Phase 3 actually still owns is
-  narrower than "beyond Claude Code" suggested: only the hosts needing a
-  bespoke plugin manifest or hook/lifecycle wiring the way Claude Code got
-  in Phase 1/2 — Codex, OpenCode, pi, Hermes Agent, Gemini CLI, GitHub
-  Copilot CLI, Qoder. Still not started, and still properly a job for an
-  RFC (which of those hosts are worth the bespoke work) before code, per
-  this project's own sequencing rule — but the scope is now known to be
-  smaller than previously stated.
+- Whether the single-ambient-skill choice (ADR-0004) still holds once other
+  plugin-tier hosts are in scope, now that RFC-0007 Phase 3 (below) has
+  actually shipped several of them without any host needing more than one
+  ambient skill. Real signal, not proof — no host-specific feedback exists
+  yet since none of these adapters have a real user base.
 - A dedicated Tier-1 maxim for Judgment or Efficiency (considered and
   deferred in ADR-0002 as a mechanism-design question, not a philosophy one).

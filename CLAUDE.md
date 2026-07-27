@@ -35,17 +35,37 @@ own benchmark uses) show a consistent pattern: Instinct-loaded sessions
 add a verification artifact baseline skips, plus caught a real
 CSV-injection issue baseline missed entirely.
 
-Distributed to 6 hosts (Claude Code, Cursor, Windsurf, Kiro, Cline,
-Copilot) via `AGENTS.md` as canonical body, kept in sync by
+Distributed to 7 file-based hosts (Claude Code, Cursor, Windsurf, Kiro,
+Cline, Copilot, Qoder) via `AGENTS.md` as canonical body, kept in sync by
 `scripts/check_adapters.py` (proven to actually catch drift, not just
 pass once — see its own test in `tests/`). Real, installable Claude Code
-plugin (`.claude-plugin/`). Two hooks: `SessionStart`
+plugin (`.claude-plugin/`). Hooks: `SessionStart`
 (`hooks/instinct-activate.js`, guarantees the Gate loads every session
-independent of skill-matching) and `SubagentStart`
+independent of skill-matching), `SubagentStart`
 (`hooks/instinct-subagent.js`, closes the gap where subagents otherwise
-run Instinct-unaware). Two companion skills (`skills/instinct-review`,
-`skills/instinct-help`), explicit-invocation only. Real pytest suite
-(`tests/`, 25 tests) and CI (`.github/workflows/test.yml`).
+run Instinct-unaware), and Qoder's `UserPromptSubmit`/`PreToolUse`
+equivalents (Qoder has no `SessionStart` event). Two companion skills
+(`skills/instinct-review`, `skills/instinct-help`), explicit-invocation
+only.
+
+RFC-0007 Phase 3 (plugin-tier hosts beyond Claude Code) is built, not
+deferred anymore — done on direct instruction overriding this project's
+own "RFC before code" sequencing rule. Covers Gemini CLI
+(`gemini-extension.json`), Codex (`.codex-plugin/`, reuses
+`hooks/hooks.json` unchanged), GitHub Copilot CLI (`.github/plugin/`,
+`hooks/copilot-hooks.json`, a real new `isCopilot` branch in
+`hooks/lib.js`'s `emitAdditionalContext` since its output contract
+differs), Qoder's plugin-tier manifest, `instinct-mcp/` (a real MCP server,
+this project's first runtime dependency — `@modelcontextprotocol/sdk` +
+`zod`, verified end-to-end with the real SDK client over stdio, not just
+unit-tested), an OpenCode server plugin (`.opencode/plugins/instinct.mjs`),
+a pi editor extension (`pi-extension/`), and a Hermes Agent plugin (root
+`plugin.yaml` + `__init__.py`). Every one of these was verified by actually
+running it (spawning the process, invoking the exported hooks with a mock
+host object, or a real SDK client), not just written and assumed correct.
+40 tests total now, including `instinct-mcp/test/` and `pi-extension/test/`
+alongside the main pytest suite (`tests/`, run via
+`.github/workflows/test.yml`).
 
 ## Non-obvious things that will save you time
 
@@ -109,19 +129,25 @@ here, it changes too fast for this file to track. As of this commit, the
 honest gaps are: no properly-powered Claude-side Layer 1/2 corpus pass, and
 no properly-powered Layer 3/4 program (two pilots, not the real thing).
 
-A full reverse-engineering pass over Ponytail is now done, not partial:
-statusline (reject, no mode concept), the mode-tracking hook family
-(reject, one output-contract nugget flagged for later), `check-rule-copies.js`
-(already covered, more strongly), the MCP server and every remaining
-plugin-tier host format — OpenCode, Codex TOML commands, pi, Hermes,
-Gemini, OpenClaw/ClawHub (reject, no presence there) — all deferred or
-rejected with reasoning in `docs/ROADMAP.md`'s hooks/CI bullet list. One
-real find came out of it: reproducing Ponytail's own `hooks-windows.test.js`
+A full reverse-engineering pass over Ponytail happened before the Phase 3
+build: statusline (reject, no mode concept), the mode-tracking hook family
+(reject, its output-contract nugget later adopted for real in Copilot's
+branch), `check-rule-copies.js` (already covered, more strongly),
+OpenClaw/ClawHub (reject, no presence there). One real find came out of
+that pass: reproducing Ponytail's own `hooks-windows.test.js`
 stdin-never-closes scenario against `hooks/instinct-subagent.js` found a
 genuine hang bug (an open stdin pipe kept Node's event loop alive even
 after the internal timeout resolved) — fixed with `process.stdin.destroy()`,
 regression-tested. Its command-syntax checks were also ported wholesale
-into `tests/test_hooks_json.py`. Nothing left to reverse-engineer from
-Ponytail without either building a Phase-3 host adapter for real (needs
-its own RFC first, per this project's sequencing rule) or going back into
-the benchmark/eval tooling, which is out of scope now.
+into `tests/test_hooks_json.py`.
+
+Everything that pass had deferred pending an RFC (the MCP server, Gemini,
+Codex, Copilot CLI, Qoder, OpenCode, pi, Hermes) was then built anyway on
+direct instruction — see `docs/ROADMAP.md`'s "RFC-0007 Phase 3" entry for
+what shipped and how each piece was actually verified, not just written.
+What's left of Ponytail's own surface: its benchmark/eval tooling, which
+is out of scope here. What's left overall: the two big properly-powered
+evaluation programs (Claude-side Layer 1/2 corpus, Layer 3/4) noted above,
+untouched by this pass, and the still-open question of whether ADR-0004's
+single-ambient-skill choice holds now that several plugin-tier hosts
+actually exist (no real user feedback yet either way).

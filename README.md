@@ -11,12 +11,16 @@ not a checklist you have to invoke.
 Pre-alpha, but functional. Design (RFC-0001–0007) is locked. `SKILL.md` has
 survived four rounds of real, repeat-sampled evaluation (two real bugs
 found and fixed, not hypothesized) and two real-repo pilots showing a
-consistent pattern against baseline. Distributed to six hosts (Claude
-Code, Cursor, Windsurf, Kiro, Cline, Copilot) via a canonical body kept in
-sync by a checker that's been proven to actually catch drift. Installable
+consistent pattern against baseline. Distributed to seven file-based hosts
+(Claude Code, Cursor, Windsurf, Kiro, Cline, Copilot, Qoder) via a
+canonical body kept in sync by a checker that's been proven to actually
+catch drift, plus plugin-tier support for Codex, GitHub Copilot CLI,
+Gemini CLI, OpenCode, the pi editor, and Hermes Agent, and an MCP server
+(`instinct-mcp/`) for hosts with no file-based rule mechanism. Installable
 as a real Claude Code plugin. Has a companion skill for reviewing
 already-made changes and one for quick reference. Has a real pytest suite
-for its own tooling. Full history in `docs/rfcs/`; what's still open is in
+for its own tooling, plus Node test suites for `instinct-mcp/` and
+`pi-extension/`. Full history in `docs/rfcs/`; what's still open is in
 `docs/ROADMAP.md` — full Claude-side Layer 1/2 corpus coverage and a
 properly powered Layer 3/4 program are the two honest gaps.
 
@@ -62,10 +66,22 @@ SKILL.md              the skill itself, Claude Code-native — read this
 AGENTS.md              canonical instruction-tier body — Critical-tier
                        detail consolidated (inlined), not pointed to,
                        for hosts with no matching step (RFC-0007)
-.cursor/ .windsurf/ .kiro/ .clinerules/ .github/copilot-instructions.md
+.cursor/ .windsurf/ .kiro/ .clinerules/ .qoder/ .github/copilot-instructions.md
                        thin per-host copies of AGENTS.md, generated (not
                        hand-typed) by scripts/generate_adapters.py
-.claude-plugin/        real Claude Code plugin manifest
+.claude-plugin/ .codex-plugin/ .qoder-plugin/ .github/plugin/
+                       plugin-tier manifests (RFC-0007 Phase 1/3)
+gemini-extension.json  points Gemini CLI at AGENTS.md
+opencode.json          points OpenCode at .opencode/plugins/instinct.mjs
+plugin.yaml + __init__.py
+                       Hermes Agent plugin (root-level, per Hermes convention)
+hooks/                 SessionStart/SubagentStart (Claude Code, Codex),
+                       Copilot- and Qoder-specific equivalents, shared
+                       SKILL.md-reading logic (hooks/lib.js)
+instinct-mcp/          MCP server (prompt + tool) for hosts with no
+                       file-based rule mechanism — its own npm package
+.opencode/plugins/     OpenCode server plugin
+pi-extension/          pi editor extension
 skills/
   instinct-review/     audit an already-made diff against the Gate
   instinct-help/       quick reference — explicit invocation, not ambient
@@ -74,7 +90,8 @@ references/            detail SKILL.md defers to when a Critical-tier
 scripts/
   check_adapters.py    sync checker — all adapters vs. SKILL.md
   generate_adapters.py regenerates the plain-markdown adapters from AGENTS.md
-tests/                 pytest suite for the tooling itself (16 tests)
+tests/                 pytest suite for the tooling itself (40 tests total,
+                       including instinct-mcp/test/ and pi-extension/test/)
 eval/
   corpus/              labeled scenarios (RFC-0005) — what "correct" means,
                        locked before SKILL.md was written (ADR-0009)

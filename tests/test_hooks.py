@@ -18,6 +18,7 @@ import pytest
 ROOT = Path(__file__).parent.parent
 HOOK = ROOT / "hooks" / "instinct-activate.js"
 SUBAGENT_HOOK = ROOT / "hooks" / "instinct-subagent.js"
+QODER_HOOK = ROOT / "hooks" / "instinct-qoder-activate.js"
 
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
 
@@ -185,3 +186,31 @@ def test_hooks_use_native_shape_under_codex_env():
     subagent_payload = json.loads(subagent_result.stdout)
     assert subagent_payload["hookSpecificOutput"]["hookEventName"] == "SubagentStart"
     assert "## The Gate" in subagent_payload["hookSpecificOutput"]["additionalContext"]
+
+
+def run_qoder_hook(plugin_root: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["node", str(QODER_HOOK)],
+        env={"CLAUDE_PLUGIN_ROOT": str(plugin_root)},
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_qoder_hook_emits_valid_user_prompt_submit_json():
+    """hooks/instinct-qoder-activate.js had no direct test at all until this
+    one — only its script name being referenced correctly inside
+    hooks/qoder-hooks.json was checked (tests/test_manifest_completeness.py),
+    never that running the script itself actually works. A syntax error or
+    a broken require() in this file would have shipped silently."""
+    result = run_qoder_hook(ROOT)
+    assert result.returncode == 0
+    payload = json.loads(result.stdout)
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "## The Gate" in payload["hookSpecificOutput"]["additionalContext"]
+
+
+def test_qoder_hook_fails_silently_when_skill_md_missing(tmp_path):
+    result = run_qoder_hook(tmp_path)
+    assert result.returncode == 0
+    assert result.stdout == ""

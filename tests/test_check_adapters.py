@@ -66,6 +66,18 @@ def test_real_repo_adapters_are_in_sync():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_skill_md_references_real_files():
+    """SKILL.md's Critical tier instructs 'Read references/ladder.md...
+    and references/provenance-out.md' — a live instruction pointing at a
+    path, with nothing anywhere checking either file still exists. A
+    rename or deletion of either would silently break Critical-tier
+    behavior with no test catching it."""
+    skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    for ref in ("references/ladder.md", "references/provenance-out.md"):
+        assert ref in skill_text, f"SKILL.md no longer mentions {ref} — is this reference stale?"
+        assert (ROOT / ref).exists(), f"SKILL.md references {ref}, which doesn't exist"
+
+
 def test_detects_real_drift(tmp_path, monkeypatch):
     """Doesn't just trust that main() returns 0 — proves it returns 1 when
     an adapter actually disagrees with SKILL.md, using throwaway copies so

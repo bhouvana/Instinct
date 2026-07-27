@@ -15,7 +15,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent
 SKILLS_DIR = ROOT / "skills"
-SKILL_MD = ROOT / "SKILL.md"
+SKILL_MD = SKILLS_DIR / "instinct" / "SKILL.md"
 
 _FRONTMATTER_RE = re.compile(r"^---\n[\s\S]*?\n---\n?")
 # SKILL.md carries scripts/check_adapters.py's sync markers so the sync

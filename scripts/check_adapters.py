@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-SKILL_PATH = ROOT / "SKILL.md"
+SKILL_PATH = ROOT / "skills" / "instinct" / "SKILL.md"
 
 # (path, is_consolidated) — is_consolidated=True means this adapter inlines
 # reference content instead of pointing to it, and its host-specific block

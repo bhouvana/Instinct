@@ -87,11 +87,21 @@ alongside the main pytest suite (`tests/`, run via
   summary. It's still only been run standalone via `node`, never observed
   firing in a real live `SubagentStart` event inside this environment —
   that's a residual gap, not fully closed.
-- **Root `SKILL.md` is deliberately still at repo root**, not moved to
-  `skills/instinct/SKILL.md` to match the layout the two companion skills
-  and Ponytail itself use. Open question, not resolved — moving
-  already-validated infrastructure on a guess about plugin-loading
-  conventions was judged not worth the risk. See `docs/ROADMAP.md`.
+- **`SKILL.md` moved to `skills/instinct/SKILL.md`**, resolving the
+  previously-open question. Ponytail's own `.claude-plugin/plugin.json`
+  has no `"skills"` field at all and no root `SKILL.md` — Claude Code
+  auto-discovers `skills/*/SKILL.md` by convention alone, confirmed from
+  the reference implementation itself, not guessed. Every path reference
+  (`hooks/lib.js`, `scripts/check_adapters.py`, `eval/run.py`,
+  `__init__.py`) was updated and the full suite re-verified. One
+  side effect worth knowing: Hermes's `register()` now also registers
+  `instinct` itself as an explicit skill (it walks `skills/*` generically),
+  not just `instinct-review`/`instinct-help` — `plugin.yaml`'s
+  `provides_skills` and its test were updated to match. Still genuinely
+  unconfirmed: whether Claude Code itself still loads it correctly from
+  the new location — nothing in this environment can launch real Claude
+  Code to check, same class of gap as every other "inferred, not
+  run" entry in `docs/installation.md`.
 - **Every "sync" or "verification" claim in this repo has actually been
   run, including proving the negative case** (e.g. `check_adapters.py`
   was tested to confirm it *catches* deliberately introduced drift, not

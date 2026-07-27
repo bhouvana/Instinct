@@ -72,7 +72,7 @@ def test_skill_md_references_real_files():
     path, with nothing anywhere checking either file still exists. A
     rename or deletion of either would silently break Critical-tier
     behavior with no test catching it."""
-    skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    skill_text = (ROOT / "skills" / "instinct" / "SKILL.md").read_text(encoding="utf-8")
     for ref in ("references/ladder.md", "references/provenance-out.md"):
         assert ref in skill_text, f"SKILL.md no longer mentions {ref} — is this reference stale?"
         assert (ROOT / ref).exists(), f"SKILL.md references {ref}, which doesn't exist"

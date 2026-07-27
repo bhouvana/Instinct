@@ -28,7 +28,7 @@ function stripSyncMarkers(text) {
 
 function getSkillBody(pluginRoot) {
   const root = pluginRoot || process.env.CLAUDE_PLUGIN_ROOT || path.join(__dirname, "..");
-  const skillPath = path.join(root, "SKILL.md");
+  const skillPath = path.join(root, "skills", "instinct", "SKILL.md");
   const raw = stripFrontmatter(fs.readFileSync(skillPath, "utf8"));
   return stripSyncMarkers(raw).trim();
 }

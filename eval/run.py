@@ -84,7 +84,7 @@ class StubBackend(Backend):
         return 1
 
 
-SKILL_PATH = Path(__file__).parent.parent / "SKILL.md"
+SKILL_PATH = Path(__file__).parent.parent / "skills" / "instinct" / "SKILL.md"
 
 _TIER_PROMPT = """You are evaluating a Claude Skill's rules, not writing code. Below is a
 skill file (frontmatter + body) and a single user request it may apply to.

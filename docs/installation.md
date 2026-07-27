@@ -36,13 +36,13 @@ your host needs into that project:
 | Qoder (instruction-tier) | `.qoder/rules/instinct.md` | confirmed present, untested against real Qoder |
 | Antigravity, CodeWhale, Swival, Amp, Jules, Zed, VS Code Codex ext., JetBrains Junie, generic agents | `AGENTS.md` at repo root | inferred from each host's own docs, via Ponytail's docs/agent-portability.md (its own host matrix — see the "RFC-0007 Phase 3" entry in `docs/ROADMAP.md` for what was reverse-engineered from it) — likely works with zero extra file, unverified |
 
-All of these are kept byte-identical to `SKILL.md` by `scripts/check_adapters.py` — if you hand-edit one, it will fail CI, not silently drift.
+All of these are kept byte-identical to `skills/instinct/SKILL.md` by `scripts/check_adapters.py` — if you hand-edit one, it will fail CI, not silently drift.
 
 ## Claude Code
 
 Two options:
 1. **As a plugin**: install via `.claude-plugin/marketplace.json` (Claude Code's own plugin-manager flow). This wires up `hooks/hooks.json` automatically — `SessionStart` and `SubagentStart` fire without further setup. Confirmed working (this is how it's been developed and tested throughout).
-2. **As a skill only**: `SKILL.md`'s own frontmatter `description` is broad enough to self-trigger without the plugin, but without the hooks it's subject to Claude Code's own matching (can silently not fire) — the plugin path is the one actually exercised.
+2. **As a skill only**: `skills/instinct/SKILL.md`'s own frontmatter `description` is broad enough to self-trigger without the plugin, but without the hooks it's subject to Claude Code's own matching (can silently not fire) — the plugin path is the one actually exercised.
 
 ## Codex
 

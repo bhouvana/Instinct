@@ -64,7 +64,8 @@ landed.
 ## Project structure
 
 ```
-SKILL.md              the skill itself, Claude Code-native — read this
+skills/instinct/SKILL.md
+                       the skill itself, Claude Code-native — read this
                        first if you just want to know what it does
 AGENTS.md              canonical instruction-tier body — Critical-tier
                        detail consolidated (inlined), not pointed to,
@@ -86,6 +87,7 @@ instinct-mcp/          MCP server (prompt + tool) for hosts with no
 .opencode/plugins/     OpenCode server plugin
 pi-extension/          pi editor extension
 skills/
+  instinct/            the ambient Gate itself (see above)
   instinct-review/     audit an already-made diff against the Gate
   instinct-help/       quick reference — explicit invocation, not ambient
 references/            detail SKILL.md defers to when a Critical-tier

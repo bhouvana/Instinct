@@ -223,11 +223,9 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
 - [x] **Companion skills** — `skills/instinct-review` (audit an
       already-made diff against the Gate) and `skills/instinct-help`
       (quick reference), explicit-invocation only, matching Ponytail's
-      review/help pattern. Root `SKILL.md` deliberately left where it is
-      rather than moved under `skills/instinct/` to match convention —
-      that's a real open structural question (noted below), not resolved
-      by moving already-validated, already-tested infrastructure on a
-      guess about plugin-loading conventions.
+      review/help pattern. Root `SKILL.md` deliberately left where it was
+      at the time rather than moved under `skills/instinct/` to match
+      convention — that structural question is now resolved, see below.
 - [x] **Reverse-engineered Ponytail's CI + hooks, adopted what transfers**
       (incremental, not a big upfront doc — see commit history):
   - **ADOPT (adapted): `hooks/instinct-activate.js`, a `SessionStart` hook.**
@@ -481,11 +479,12 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     case Ponytail's own extension guards against.
   - Root `plugin.yaml` + `__init__.py` — the Hermes Agent plugin. Same
     `register(ctx)` contract as Ponytail's, with mode state and gateway
-    slash-command rewriting dropped. `provides_skills` lists
-    `instinct-review`/`instinct-help` (the directories that actually exist
-    under `skills/`), not `instinct` itself, since the root Gate lives at
-    `SKILL.md` rather than `skills/instinct/` — the still-open structural
-    question noted below. Verified with real Python execution via
+    slash-command rewriting dropped. `provides_skills` originally listed
+    only `instinct-review`/`instinct-help`, since at the time the Gate
+    lived at root `SKILL.md` rather than `skills/instinct/` — now that the
+    move below has happened, `register()`'s generic directory walk picks
+    up `instinct` too, and `provides_skills` was updated to match.
+    Verified with real Python execution via
     `importlib`, including that `register()` wires exactly the right skill
     names and hook onto a mock `ctx`.
 
@@ -631,17 +630,31 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     pinned as a permanent test.
   - 81 tests pass after this pass — 18 added closing gaps in tooling that
     was itself less than a day old.
+- [x] **`SKILL.md` moved to `skills/instinct/SKILL.md`, resolving the
+      structural question deferred since RFC-0007 Phase 1/2.** Confirmed
+      from Ponytail's own reference implementation, not guessed: its
+      `.claude-plugin/plugin.json` has no `"skills"` field at all and no
+      root `SKILL.md` anywhere — Claude Code auto-discovers
+      `skills/*/SKILL.md` by convention alone, which is strong evidence
+      the root location was never required, just where the file happened
+      to start. Updated every path reference
+      (`hooks/lib.js`'s `getSkillBody`, `scripts/check_adapters.py`,
+      `eval/run.py`, the Hermes `__init__.py`) and the tests that hardcoded
+      the old location. One real cascading effect, not just a rename:
+      the Hermes plugin's `register()` already walked `skills/*` generically,
+      so moving `SKILL.md` there makes it a registered, explicitly-invocable
+      skill too (`instinct`, alongside `instinct-review`/`instinct-help`) —
+      `plugin.yaml`'s `provides_skills` and its completeness test were
+      updated to match, not left inconsistent. 81 tests still pass.
+      Honestly flagged, not claimed: whether real Claude Code still loads
+      the skill correctly from the new path is **inferred** from Ponytail's
+      working example, not run against real Claude Code from this
+      environment — same category as every other unverified host in
+      `docs/installation.md`.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten
 
-- Whether root-level `SKILL.md` should move to `skills/instinct/SKILL.md`
-  to match the multi-skill layout `skills/instinct-review` and
-  `skills/instinct-help` now use (and the layout Ponytail itself uses
-  throughout — it has no root SKILL.md at all). Not done now: unconfirmed
-  whether Claude Code's plugin loader actually requires this, and moving
-  already-validated infrastructure on a guess is exactly the kind of
-  needless-blast-radius change this project argues against.
 - Whether the single-ambient-skill choice (ADR-0004) still holds once other
   plugin-tier hosts are in scope, now that RFC-0007 Phase 3 (below) has
   actually shipped several of them without any host needing more than one

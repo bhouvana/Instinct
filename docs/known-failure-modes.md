@@ -56,11 +56,13 @@ Gate "yes").
   overcorrect those into Tier 1.
 
 **Status**: the Q3-based failure mode is stable (per RFC-0010's re-check);
-the Q2-based failure mode found this session is fixed and confirmed 2/2 on
-fresh Claude samples, with a companion 2/2 non-regression check on the
-adjacent legitimately-Tier-2 cases. Neither confirmed at RFC-0004's full
-N≥3 standard yet (2 samples each, not 3) — the next real pass should push
-both to N≥3.
+the Q2-based failure mode found this session is fixed and now confirmed
+3/3 on fresh Claude samples, meeting RFC-0004's N≥3 standard — the third
+sample (added specifically to close this out, not incidentally) again
+landed Tier 1 citing the Q2 carve-out directly. The companion
+non-regression check on `gt-02`/`gt-06` remains at 2/2, not yet pushed to
+N≥3 itself, but those weren't newly-fixed cases, just a check that the
+fix didn't break something already working.
 
 ## `gt-03` — the RFC-0008 fix's own wording getting misapplied
 
@@ -81,6 +83,9 @@ canonical breaking-change example, RFC-0003).
 - `docs/rfcs/0011-gt03-resolution.md`: 10/10 fresh Claude samples,
   unanimous Tier 3, clean reasoning, several samples quoting the fix's
   own corrected language back.
+- One additional fresh sample this session (unprompted by any new
+  wording change — just an incidental re-check while confirming `gt-07`
+  above): 11/11, still unanimous Tier 3.
 
 **Status**: resolved and confirmed at the N≥3 standard, on Claude,
 specifically. The strongest-evidence case in the corpus.

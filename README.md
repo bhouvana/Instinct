@@ -90,7 +90,8 @@ references/            detail SKILL.md defers to when a Critical-tier
 scripts/
   check_adapters.py    sync checker — all adapters vs. SKILL.md
   generate_adapters.py regenerates the plain-markdown adapters from AGENTS.md
-tests/                 pytest suite for the tooling itself (40 tests total,
+  check_versions.py    every host manifest's version field must agree
+tests/                 pytest suite for the tooling itself (52 tests total,
                        including instinct-mcp/test/ and pi-extension/test/)
 eval/
   corpus/              labeled scenarios (RFC-0005) — what "correct" means,

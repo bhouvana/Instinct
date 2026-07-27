@@ -1,0 +1,9 @@
+name: instinct
+version: 0.1.0
+description: Engineering judgment as a default instinct for Hermes Agent — the Gate and its tiers, always-on context and bundled skills.
+author: Instinct Project Contributors
+provides_hooks:
+  - pre_llm_call
+provides_skills:
+  - instinct-review
+  - instinct-help

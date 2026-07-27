@@ -590,6 +590,47 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     hygiene one.
   - 63 tests pass after this sweep, all newly added or extended, not
     carried over.
+- [x] **Turned the "10,000 users, 100 contributors" lens on this session's
+      own new tooling, not just on Ponytail.** Auditing the sweep above
+      immediately after finishing it (per the same directive: don't wait
+      until done studying) found it had reproduced the exact gap it was
+      supposed to close:
+  - **Found: none of `test_ci_workflow.py`, `test_manifest_completeness.py`,
+    or `test_doc_file_references.py` had a permanent failure-injection
+    test** — each was proven to catch drift by hand, once, during
+    development, then left with nothing guaranteeing the detection logic
+    itself couldn't silently regress into a no-op (an inverted condition,
+    a refactor that breaks the glob). `test_check_adapters.py` and
+    `test_check_versions.py` already held themselves to this standard
+    (`test_detects_real_drift`, `test_detects_real_mismatch`); the three
+    new files didn't. Fixed by refactoring each into pure "find the
+    problem" functions the pytest assertions call against the real repo,
+    so a second set of tests could feed them synthetic bad data directly —
+    including a test that pins the exact `lstrip("./")` bug found earlier
+    as a permanent regression, not just an explanatory comment.
+  - **Found: `hooks/instinct-qoder-activate.js` had no direct test at
+    all** — only its script *name* being spelled correctly inside
+    `qoder-hooks.json` was checked, never that running the script actually
+    works, unlike `instinct-activate.js` and `instinct-subagent.js`, which
+    both have dedicated tests. Added the same pair (emits valid JSON /
+    fails silently when `SKILL.md` is missing).
+  - **Found: `SKILL.md`'s "Read `references/ladder.md`... and
+    `references/provenance-out.md`" instruction had nothing checking
+    either file still exists.** A live instruction pointing at a path, one
+    rename away from silently breaking Critical-tier behavior. Added to
+    `test_check_adapters.py`.
+  - **Found and fixed: real, unnecessary manual work.**
+    `docs/installation.md`'s Qoder section named a real, currently-manual
+    step (substituting `INSTINCT_DIR` by hand into a JSON template) as
+    unautomated friction rather than closing it. Built
+    `scripts/render_qoder_hooks.py` to remove it — and found a real bug
+    running it with its own default argument on Windows:
+    `Path.resolve()`'s backslashes are invalid JSON escapes once
+    substituted into the template, a genuine crash, not a hypothetical
+    one. Fixed by normalizing to forward slashes before substitution,
+    pinned as a permanent test.
+  - 81 tests pass after this pass — 18 added closing gaps in tooling that
+    was itself less than a day old.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

@@ -31,6 +31,23 @@ def test_plugin_yaml_is_valid_and_lists_the_actual_skill_dirs():
         assert (ROOT / "skills" / skill / "SKILL.md").exists(), f"listed skill {skill} has no SKILL.md"
 
 
+def test_plugin_yaml_lists_every_real_skill_directory():
+    """The reverse of the check above: every skills/*/SKILL.md on disk must
+    be listed in plugin.yaml's provides_skills, not just the other way
+    round. Adapted from Ponytail's tests/hermes-plugin.test.js, which reads
+    the actual skills/ directory listing and cross-checks it against the
+    manifest — this is the direction that catches a new skill directory
+    getting added to the repo but forgotten in the manifest, which the
+    "every listed skill exists" check above can't see at all."""
+    manifest = yaml.safe_load((ROOT / "plugin.yaml").read_text(encoding="utf-8"))
+    real_skill_dirs = {
+        d.name for d in (ROOT / "skills").iterdir()
+        if d.is_dir() and (d / "SKILL.md").exists()
+    }
+    assert real_skill_dirs, "expected at least one real skill directory"
+    assert set(manifest["provides_skills"]) == real_skill_dirs
+
+
 def test_build_injected_context_returns_the_gate():
     plugin = _load_plugin_module()
     context = plugin.build_injected_context()

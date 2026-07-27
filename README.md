@@ -77,6 +77,33 @@ full text, with the rest of the tier obligations, `Bug fixes`, `Never`, and
 `Scope` sections, lives in [`skills/instinct/SKILL.md`](skills/instinct/SKILL.md) —
 that file is the actual artifact; everything above is a summary of it.
 
+## The Gate in action
+
+> "Add a required tenantId parameter to the public createUser API, used at 12 call sites."
+
+Read as a request, this sounds additive — nothing removed, just one more
+field. Read through the Gate:
+
+- **Q1** (touches beyond what's named)? Yes — all 12 call sites now have to
+  pass a value they didn't before.
+- **Q2** (more than one consumer)? Yes.
+- **Q3** (expensive to undo)? Yes — a *required* parameter breaks every
+  existing caller simultaneously the moment it ships. "Adds a parameter"
+  doesn't make that safe.
+
+**Critical.** Reconstruct why `createUser` doesn't already scope by tenant,
+state the alternative once (an optional parameter defaulting to the
+caller's own tenant, say), then implement whichever the requester confirms.
+
+This is this project's own canonical Critical-tier example
+(`gt-03` in [`eval/corpus/gate_tier.yaml`](eval/corpus/gate_tier.yaml)) —
+and also the one real bug this evaluation found and fixed *twice*: a fresh
+model talked itself out of escalating it by leaning on the word "additive,"
+before the Gate's own wording was corrected to name the actual test ("does
+an existing caller have to change anything"). It now lands Critical on
+**11/11** independent fresh-Claude samples, unanimous. Full history:
+[`docs/known-failure-modes.md`](docs/known-failure-modes.md).
+
 ## What this is not
 
 - A prompt pack of style instructions.
@@ -136,26 +163,36 @@ from a documented contract, not run against real host software from this
 environment) for every host — that distinction is maintained deliberately,
 not glossed over.
 
-## How we know it works (and what we're honest about not knowing yet)
+## Evidence
 
-- `SKILL.md` has survived multiple rounds of real, repeat-sampled
-  evaluation against fresh model instances — three real bugs found and
-  fixed, not hypothesized, each confirmed and re-verified after the fix,
-  not just patched and assumed. Full history in
-  [`docs/known-failure-modes.md`](docs/known-failure-modes.md).
-- Two real-repo pilots (one on this repo, one on
-  `tiangolo/full-stack-fastapi-template` — the same repo Ponytail's own
-  benchmark uses) show a consistent pattern: Instinct-loaded sessions add a
-  verification step baseline skips, and once caught a real security issue
-  baseline missed entirely.
-- A judgment regression suite (`eval/run.py`) is wired into CI, gated on an
-  `ANTHROPIC_API_KEY` secret — it skips cleanly today because there isn't
-  one, and turns on with zero further engineering the moment there is.
-- **The honest gap**: no properly-powered Claude-side evaluation program
-  exists yet — what exists is real, individually-verified findings
-  accumulating one at a time, which is evidence, but slower and smaller
-  than a real benchmark suite would produce. This is stated here on
-  purpose, not buried in `docs/ROADMAP.md` alone.
+Instinct doesn't have Ponytail's kind of number — there's no LOC/cost/time
+benchmark suite behind it, and building one just to have a chart would be
+exactly the fabricated-looking-metrics theater this project argues
+against elsewhere (see `docs/ROADMAP.md`'s call on why there's no
+`instinct-gain` skill). What it has instead is real, individually-verified
+evaluation evidence — every row below is something that was actually run,
+not projected:
+
+| What was tested | Result | Where |
+|---|---|---|
+| Trigger accuracy — does the skill correctly fire or skip | **10/10** on two independent fresh-Claude samples (20/20 total) | [`docs/known-failure-modes.md`](docs/known-failure-modes.md) |
+| Canonical breaking-change example (`gt-03`, above) | **11/11** unanimous, Critical tier | [`docs/rfcs/0011`](docs/rfcs/0011-gt03-resolution.md) |
+| Q2 wording fix (`gt-07`) | **3/3** clean after the fix — meets this project's own N≥3 confirmation standard | [`docs/known-failure-modes.md`](docs/known-failure-modes.md) |
+| Real-repo pilot, 3 tasks, baseline vs. Instinct-loaded | Instinct-loaded added a verification step baseline skipped **in all 3**; caught a real CSV-injection vulnerability baseline missed entirely | [`docs/rfcs/0013`](docs/rfcs/0013-real-repo-pilot.md) |
+| Claude Code plugin installability | Confirmed by actually installing it with the real `claude` CLI — found and fixed a load-breaking bug in the process that nobody had caught, because nobody had actually installed it before | [`docs/installation.md`](docs/installation.md) |
+| Full test suite | **91/91** passing (85 Python + 6 Node), including tests that prove the checkers themselves catch injected drift, not just pass when nothing's wrong | [`tests/`](tests/) |
+
+Three real bugs found and fixed via evaluation this way, not hypothesized
+— each one confirmed on fresh model samples *after* the fix, not just
+patched and assumed correct.
+
+**The honest gap, stated here rather than only in `docs/ROADMAP.md`**:
+this is real evidence, not a properly-powered evaluation program. The
+corpus is 21 hand-labeled scenarios, not hundreds; the pilots are 1 and 3
+tasks, not dozens. A judgment regression suite
+([`eval/run.py`](eval/run.py)) is wired into CI and ready to run
+automatically the moment a real `ANTHROPIC_API_KEY` is available — it
+isn't yet, so it skips cleanly today rather than pretending to run.
 
 ## Installation
 

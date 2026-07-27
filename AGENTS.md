@@ -36,6 +36,12 @@ yes. Treat an unclear answer as yes.
    (auth, payment, deletion, data access), or needs someone else's
    coordinated follow-up to reverse?
 
+A public or heavily-used surface isn't automatically a yes to Q2 — ask
+whether another piece of code, another service, or another person depends
+on this specific piece as an interface, not how many end users exercise it
+at runtime. Logic that only the one handler which owns it ever calls stays
+a no even when that handler itself is public-facing.
+
 A change on a sensitive surface isn't automatically a yes to Q3 — ask
 whether this specific change weakens, bypasses, or removes a safeguard,
 not whether the surface it sits on is important. A change that only makes

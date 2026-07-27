@@ -36,11 +36,31 @@ Gate "yes").
 - `docs/rfcs/0010-repeat-sampling-and-regression.md`: repeat sampling
   turned the disagreement into a confirmed 3/3 on Ollama, then a
   follow-up wording pass looked stable — 2/2 clean on re-check.
+- **A second, distinct failure mode**, found via a fresh two-sample
+  Agent-tool evaluation of the full trigger + gate_tier corpus (not tied
+  to a numbered RFC): both independent Claude samples landed on Tier 2,
+  not Tier 1, with matching reasoning — "a public endpoint has multiple
+  callers (Q2 yes), but stricter validation with no required caller
+  changes is a no on Q3." This is not the original Q3-based bug (both
+  samples correctly avoided that one); it's Q2's "consumer" wording
+  reading "many end users hit this" as equivalent to "another piece of
+  code depends on this as an interface." Fixed by adding a parallel
+  carve-out to Q2 in `SKILL.md` ("a public or heavily-used surface isn't
+  automatically a yes to Q2... Logic that only the one handler which owns
+  it ever calls stays a no even when that handler itself is
+  public-facing"), propagated to `AGENTS.md` and every adapter. Re-verified
+  with two more fresh samples after the fix: both now read Tier 1 for
+  `gt-07`, citing the new Q2 language directly, and a paired check against
+  `gt-02`/`gt-06` (which need Q2 "yes" for real reasons — explicit stated
+  reuse, two explicit callers) confirmed the tightened wording didn't
+  overcorrect those into Tier 1.
 
-**Status**: improved and currently stable on re-check, but never
-confirmed at RFC-0004's N≥3 standard on Claude specifically the way
-`gt-03` was in RFC-0011. Treat as "probably fixed," not "closed" — the
-next real Claude-side pass should sample this one specifically.
+**Status**: the Q3-based failure mode is stable (per RFC-0010's re-check);
+the Q2-based failure mode found this session is fixed and confirmed 2/2 on
+fresh Claude samples, with a companion 2/2 non-regression check on the
+adjacent legitimately-Tier-2 cases. Neither confirmed at RFC-0004's full
+N≥3 standard yet (2 samples each, not 3) — the next real pass should push
+both to N≥3.
 
 ## `gt-03` — the RFC-0008 fix's own wording getting misapplied
 
@@ -64,6 +84,36 @@ canonical breaking-change example, RFC-0003).
 
 **Status**: resolved and confirmed at the N≥3 standard, on Claude,
 specifically. The strongest-evidence case in the corpus.
+
+## Methodology gap, not a Gate bug: `gt-01`/`gt-05` assume they already triggered
+
+The same two-sample evaluation that found the `gt-07` Q2 issue asked both
+the trigger question and the tier question for every `gate_tier.yaml`
+entry, which the corpus itself doesn't do — `gate_tier.yaml` has no
+`expected_trigger` field; it assumes each scenario already triggered and
+only grades the tier. Asked cold, both fresh samples said `gt-01` ("Add
+*.log to .gitignore") and `gt-05` (a fully-specified single-file rename)
+wouldn't trigger at all, which is a defensible reading given `trigger.yaml`'s
+own execution-only skip cases (`trg-03`, `trg-05`) look the same shape.
+Not a Gate defect — the Gate was never actually asked to classify these
+under `eval/run.py`'s real methodology, since `classify_tier()` doesn't
+call `should_trigger()` first. Worth a decision at some point: either add
+`expected_trigger` to every `gate_tier.yaml` entry, or accept that these
+two are informative but ungraded until it does.
+
+## Watching, not confirmed: `trg-04` and payment-adjacent code
+
+Not in `gate_tier.yaml` (no `expected_tier` to grade against), but the
+same two-sample run disagreed with itself on "Refactor the payment retry
+logic to use exponential backoff instead of fixed delay" — one sample said
+Tier 2, the other Tier 3, over whether touching code adjacent to payment
+without changing its interface "crosses" the trust boundary Q3 names
+explicitly (`auth, payment, deletion, data access`). N=1 disagreement is
+noise until it repeats, per this file's own governance, but it's the same
+shape as the already-fixed "public" association bug — a named trust-
+boundary word possibly pulling escalation by proximity rather than actual
+exposure. Not chased further now; sample this one again before touching
+anything.
 
 ## What this catalog is not
 

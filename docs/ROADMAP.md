@@ -156,6 +156,30 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
   - Fixed `eval/README.md`'s stale claim that `ApiBackend` "raises
     NotImplementedError" — it's been a real implementation since RFC-0009;
     the doc had drifted from the code.
+- [x] **A real Gate bug found and fixed the same day the suite was scoped** —
+      before the CI path had a key to run through, two independent
+      Agent-tool samples (fresh Claude, not stub or Ollama) covering the
+      full 18-scenario trigger + gate_tier corpus found: 10/10 trigger
+      correct in both samples (the strongest trigger evidence yet), 5/8
+      gate_tier scenarios clean in both, and one real, consistent
+      disagreement — `gt-07` landing on Tier 2 instead of 1 in both
+      samples, via `Q2` ("more than one consumer") reading a public
+      endpoint's end-user traffic as equivalent to a code-level interface
+      dependency. Distinct from the Q3-based bug RFC-0008 already fixed for
+      the same scenario ID. Fixed with a parallel Q2 carve-out in
+      `SKILL.md` (public/heavily-used surface isn't automatically a yes to
+      Q2 either), propagated to `AGENTS.md` and all 7 adapters, verified
+      back in sync. Re-verified with two more fresh samples: `gt-07` now
+      reads Tier 1 in both, and a paired non-regression check against
+      `gt-02`/`gt-06` (genuinely Tier 2 via explicit stated reuse / two
+      explicit callers) confirmed the tightened wording didn't overcorrect.
+      Full writeup, plus two more real findings from the same run
+      (`gt-01`/`gt-05`'s trigger-assumption methodology gap, and a watched-
+      not-confirmed `trg-04` payment-proximity disagreement) in
+      `docs/known-failure-modes.md`. ~306K tokens total across the four
+      Agent calls this took (two 18-scenario batches, two 3-scenario
+      re-verifications) — a real cost data point for whether Agent-tool
+      spot-checks scale as the corpus grows, not just for CI-with-a-key.
 - [x] **Layer 3/4 pilot, N=1** (`docs/rfcs/0012-layer34-pilot.md`) — one
       task, run twice (baseline vs. Instinct-loaded) in isolated worktrees
       against this repo's own now-real history. Clean contrast: baseline

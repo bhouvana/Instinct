@@ -89,6 +89,8 @@ pi-extension/          pi editor extension
 skills/
   instinct/            the ambient Gate itself (see above)
   instinct-review/     audit an already-made diff against the Gate
+  instinct-audit/      the same question at repo/history scale, not one diff
+  instinct-debt/       harvest instinct: accepted-limitation markers into a ledger
   instinct-help/       quick reference — explicit invocation, not ambient
 references/            detail SKILL.md defers to when a Critical-tier
                        request actually needs it

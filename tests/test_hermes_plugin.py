@@ -75,7 +75,9 @@ def test_register_wires_skills_and_hook_onto_ctx():
     plugin.register(ctx)
 
     registered_skill_names = {call.args[0] for call in ctx.register_skill.call_args_list}
-    assert registered_skill_names == {"instinct", "instinct-review", "instinct-help"}
+    assert registered_skill_names == {
+        "instinct", "instinct-review", "instinct-help", "instinct-debt", "instinct-audit",
+    }
 
     hook_names = {call.args[0] for call in ctx.register_hook.call_args_list}
     assert hook_names == {"pre_llm_call"}

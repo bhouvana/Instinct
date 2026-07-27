@@ -566,17 +566,29 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     Ponytail's benchmark tooling. The equivalent concern for Instinct's
     actual judgment corpus ("does the grading logic work") is already
     covered by `tests/test_eval_run.py` against `eval/run.py`.
-  - **REJECT (nothing to harvest yet): `ponytail-debt`/`instinct:` marker
-    ledger.** Read `skills/ponytail-debt/SKILL.md`: it harvests every
-    `ponytail:` shortcut-marker comment into a ledger so a deferral can't
-    quietly become permanent. Instinct has the same underlying convention,
+  - **REJECT (nothing to harvest yet), later reopened and built:
+    `ponytail-debt`/`instinct:` marker ledger.** Read
+    `skills/ponytail-debt/SKILL.md`: it harvests every `ponytail:`
+    shortcut-marker comment into a ledger so a deferral can't quietly
+    become permanent. Instinct has the same underlying convention,
     narrower in scope (`references/provenance-out.md`'s `instinct:` marker,
-    Critical-tier accepted-limitations only, not any shortcut at any
-    tier) — but a repo-wide grep confirms zero `instinct:` markers exist
-    anywhere in the codebase yet. Building a harvester for a ledger with
-    nothing in it is the same scaffolding-not-verification call already
-    made for `check-versions.js` before Phase 3 gave it something to
-    check. Revisit once markers actually start accumulating.
+    Critical-tier accepted-limitations only) — at the time, a repo-wide
+    grep confirmed zero markers existed anywhere, so a harvester had
+    nothing to check, the same scaffolding-not-verification call already
+    made for `check-versions.js` before Phase 3. **Update**: on direct
+    instruction to expand the skill family regardless (the "nothing to
+    harvest yet" reasoning was about a *script* run automatically, not a
+    reusable *skill* invoked on demand — `instinct-review` exists the same
+    way for diffs that may not need it), built `skills/instinct-debt/`.
+    Found a real bug in its own first draft by actually running the grep
+    it instructs: a plain `grep -rn "instinct:"` returned two dozen false
+    positives (docs, ADRs, the sync-marker's own regex source) because it
+    wasn't anchored to a comment prefix — Ponytail's own
+    `grep -rnE '(#|//) ?ponytail:'` already solved this correctly and
+    hadn't been re-checked before adapting it. Fixed to anchor the same
+    way, re-verified it returns zero matches against the real repo (still
+    true — no debt yet, and now the skill would report that correctly
+    instead of drowning it in noise).
   - **DEFER (no consumer yet): `.github/workflows/publish.yml` (npm
     trusted publishing via OIDC).** A genuinely good pattern — no stored
     npm token, provenance attached automatically, tag-triggered — but
@@ -651,6 +663,34 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       working example, not run against real Claude Code from this
       environment — same category as every other unverified host in
       `docs/installation.md`.
+- [x] **Skill family expanded, on direct instruction, ahead of ADR-0004's
+      original "prove the ambient mechanism first" precondition being
+      fully met.** That precondition hasn't changed — still no
+      properly-powered evaluation, still no real usage — but the call was
+      made anyway, so the reasoning is recorded rather than silently
+      overridden:
+  - `skills/instinct-debt/` — see the reopened entry above.
+  - `skills/instinct-audit/` — new, not a straight port. Ponytail's
+    `ponytail-audit` is a whole-repo *over-engineering* sweep (find code to
+    delete/simplify), which is Ponytail's own core mission scaled up and
+    doesn't map onto what Instinct actually checks for. Designed instead
+    as `instinct-review`'s question ("was this diff handled with the right
+    scrutiny") asked at repo/history scale instead of one diff: scan
+    recent commits for Critical-tier-shaped changes (removed public
+    surface, new required parameter, deleted file others imported, a
+    changed trust boundary) and check whether each one actually left the
+    provenance `SKILL.md`'s Critical tier obligates — a tradeoff stated, an
+    alternative named, a verification artifact — rather than just having
+    happened.
+  - **No `instinct-gain` equivalent, and none is planned.** Ponytail's
+    version is a scoreboard pulled from its own real benchmark suite (LOC
+    reduction, cost, speed across real runs). Instinct has deliberately
+    not built benchmark tooling (see the earlier `behavior.test.js`/
+    `correctness.test.js` reject) and "made a better decision" isn't
+    obviously quantifiable the way "fewer lines of code" is — a skill that
+    prints fabricated-looking numbers with no real measurement behind them
+    would be exactly the "looks tested" theater this project argues
+    against, not a fourth skill worth having.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

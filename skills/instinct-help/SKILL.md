@@ -30,11 +30,14 @@ check for the same defect at other call sites before patching just the
 one path named. Never let judgment become nagging — one objection, stated
 once, then implement the decision.
 
-**Full detail:** `SKILL.md` (the actual behavior), `references/ladder.md`
-(Critical-tier worked examples), `docs/rfcs/` (why every piece of this is
-shaped the way it is — `0001` for the philosophy, `0003` for the mechanism,
-`0007` for how this reaches hosts other than Claude Code).
+**Full detail:** `skills/instinct/SKILL.md` (the actual behavior),
+`references/ladder.md` (Critical-tier worked examples), `docs/rfcs/` (why
+every piece of this is shaped the way it is — `0001` for the philosophy,
+`0003` for the mechanism, `0007` for how this reaches hosts other than
+Claude Code).
 
-**Related:** `instinct-review` audits an already-made change against this
-same Gate; the core `instinct` skill is ambient and applies before a
-change is made, not after.
+**Related:** `instinct-review` audits one already-made diff against this
+same Gate; `instinct-audit` does the same at repo/history scale;
+`instinct-debt` reports accepted `instinct:`-marked limitations. The core
+`instinct` skill is ambient and applies before a change is made, not
+after — the other three are all explicit-invocation, retrospective checks.

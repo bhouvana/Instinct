@@ -25,6 +25,9 @@ jobs:
       - name: Check adapter sync (SKILL.md vs. AGENTS.md/.cursor/.windsurf/.qoder/...)
         run: python scripts/check_adapters.py
 
+      - name: Check version consistency across host manifests
+        run: python scripts/check_versions.py
+
       - name: Run test suite (includes plugin-manifest JSON validation)
         run: python -m pytest tests/ -v
 

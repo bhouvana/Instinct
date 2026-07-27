@@ -201,11 +201,24 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     Claude Code specifically, install/uninstall is already Claude Code's
     own plugin-manager job now that a real manifest exists. Building
     uninstall before install is solving half a problem backwards.
-  - **REJECT (for now): `scripts/check-versions.js` equivalent.** Only one
-    file carries a version number right now (`plugin.json`) — there's
-    nothing to drift against yet. A version-sync checker with nothing to
-    check is scaffolding, not verification, the same call already made
-    for `AGENTS.md` before it existed (RFC-0007).
+  - **REJECT (for now) — reopened and resolved below: `scripts/check-versions.js`
+    equivalent.** Only one file carries a version number right now
+    (`plugin.json`) — there's nothing to drift against yet. A version-sync
+    checker with nothing to check is scaffolding, not verification, the
+    same call already made for `AGENTS.md` before it existed (RFC-0007).
+    **Update, after RFC-0007 Phase 3:** the premise changed. Phase 3 added
+    six more version-bearing files (`.codex-plugin/`, `.qoder-plugin/`,
+    `.github/plugin/`, `gemini-extension.json`, `instinct-mcp/package.json`,
+    `plugin.yaml`) — there is now something real to drift against, the
+    exact condition this reject said would justify building it.
+    `scripts/check_versions.py` adopts Ponytail's `check-versions.js`
+    directly: every version-bearing file must share one pinned `X.Y.Z`.
+    `pi-extension/package.json` stays excluded, matching Ponytail's own
+    checker exactly — it's a private, unpublished dev package with no
+    version field to begin with, not an oversight. Confirmed the checker
+    actually catches a mismatch (bumped one file to `0.2.0`, watched it
+    fail, reverted, confirmed clean again), not just that it passes once.
+    Wired into CI alongside `check_adapters.py`.
   - **ADOPT (adapted): `hooks/instinct-subagent.js`, a `SubagentStart`
     hook.** Closes a gap this project had been manually working around
     all session — a `SessionStart` hook's context is parent-thread only

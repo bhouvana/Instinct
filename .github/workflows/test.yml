@@ -33,3 +33,7 @@ jobs:
         run: |
           npm install
           npm test
+
+      - name: Test pi-extension
+        working-directory: pi-extension
+        run: npm test

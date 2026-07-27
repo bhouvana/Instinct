@@ -109,9 +109,19 @@ here, it changes too fast for this file to track. As of this commit, the
 honest gaps are: no properly-powered Claude-side Layer 1/2 corpus pass, and
 no properly-powered Layer 3/4 program (two pilots, not the real thing).
 
-The two remaining Ponytail mechanisms (statusline script, MCP-server
-equivalent) have now been read and closed out, not left open: statusline
-is a REJECT (it visualizes an intensity-mode concept ADR-0004 already
-chose not to have); the MCP server is a DEFER tied to RFC-0007 Phase 3
-(plugin-tier hosts beyond Claude Code), not built speculatively ahead of
-that RFC. See `docs/ROADMAP.md`'s hooks/CI bullet list for the reasoning.
+A full reverse-engineering pass over Ponytail is now done, not partial:
+statusline (reject, no mode concept), the mode-tracking hook family
+(reject, one output-contract nugget flagged for later), `check-rule-copies.js`
+(already covered, more strongly), the MCP server and every remaining
+plugin-tier host format — OpenCode, Codex TOML commands, pi, Hermes,
+Gemini, OpenClaw/ClawHub (reject, no presence there) — all deferred or
+rejected with reasoning in `docs/ROADMAP.md`'s hooks/CI bullet list. One
+real find came out of it: reproducing Ponytail's own `hooks-windows.test.js`
+stdin-never-closes scenario against `hooks/instinct-subagent.js` found a
+genuine hang bug (an open stdin pipe kept Node's event loop alive even
+after the internal timeout resolved) — fixed with `process.stdin.destroy()`,
+regression-tested. Its command-syntax checks were also ported wholesale
+into `tests/test_hooks_json.py`. Nothing left to reverse-engineer from
+Ponytail without either building a Phase-3 host adapter for real (needs
+its own RFC first, per this project's sequencing rule) or going back into
+the benchmark/eval tooling, which is out of scope now.

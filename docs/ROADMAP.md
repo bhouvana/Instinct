@@ -321,6 +321,34 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     rather than added to it, since that file's Node-availability skip
     marker doesn't apply here — these checks have nothing to do with Node
     being on `PATH`.
+  - **REJECT: `scripts/build-openclaw-skills.js` /
+    `publish-openclaw-skills.js` equivalent.** Read both: they package
+    Ponytail's skills for ClawHub, a third-party OpenClaw skill registry,
+    and push them there with a dedicated CLI. Instinct has no ClawHub
+    presence and no evidence of demand for one — unlike the AGENTS.md-only
+    hosts noted above, this isn't "already covered for free," it's a
+    distribution channel this project isn't on. Building publishing
+    tooling for a registry with no consumer would be scaffolding, not
+    verification.
+  - **Spot-checked, nothing new: `.opencode/plugins/ponytail.mjs` (OpenCode
+    server plugin), `commands/*.toml` (Codex custom-prompt format).** Both
+    read directly. The OpenCode plugin injects the ruleset every turn via
+    `experimental.chat.system.transform` and persists mode to a flag file
+    beside OpenCode's own config — same mode-tracking pattern already
+    rejected above, applied to yet another host. The Codex `.toml` commands
+    are the same content Ponytail already ships elsewhere, reformatted for
+    Codex's command format — the same "thin generated per-host copy"
+    pattern `generate_adapters.py` already implements for Instinct's
+    Markdown-based hosts, just a different file format. Neither reveals a
+    mechanism not already captured by the Phase 3 scope note above or the
+    mode-tracking-family reject; not spending further reads on `pi-extension/`,
+    the Hermes `plugin.yaml`, or `gemini-extension.json` on the same basis —
+    each is a plugin manifest for one specific host in that same narrowed
+    Phase 3 list, not a new category of thing to decide on. This closes out
+    the reverse-engineering pass at reasonable depth: everything in
+    Ponytail that isn't a Phase-3-gated host plugin or its own benchmark/eval
+    tooling (out of scope here) has now been read and given an explicit
+    ADOPT/ADAPT/REJECT/DEFER call.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

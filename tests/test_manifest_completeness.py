@@ -23,11 +23,15 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 
 # (manifest path, keys whose string value is a path relative to ROOT)
+# .claude-plugin/plugin.json deliberately excluded: it has no "hooks" or
+# "skills" field at all, relying on Claude Code's own auto-discovery for
+# both (confirmed with the real claude CLI — an explicit "hooks" field
+# pointing at the auto-discovered default path is a duplicate-load error,
+# not a redundant-but-harmless one).
 PATH_BEARING_MANIFESTS = [
     (".codex-plugin/plugin.json", ["skills", "hooks"]),
     (".qoder-plugin/plugin.json", ["skills", "rules", "hooks"]),
     (".github/plugin/plugin.json", ["skills", "hooks"]),
-    (".claude-plugin/plugin.json", ["hooks"]),
 ]
 
 

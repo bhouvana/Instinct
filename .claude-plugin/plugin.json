@@ -4,6 +4,5 @@
   "description": "Engineering judgment as a default instinct — Provenance, Judgment, and Efficiency before implementation, not a persona or a checklist you invoke.",
   "author": {
     "name": "Instinct Project Contributors"
-  },
-  "hooks": "./hooks/hooks.json"
+  }
 }

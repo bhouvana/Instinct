@@ -658,11 +658,50 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       skill too (`instinct`, alongside `instinct-review`/`instinct-help`) —
       `plugin.yaml`'s `provides_skills` and its completeness test were
       updated to match, not left inconsistent. 81 tests still pass.
-      Honestly flagged, not claimed: whether real Claude Code still loads
-      the skill correctly from the new path is **inferred** from Ponytail's
-      working example, not run against real Claude Code from this
-      environment — same category as every other unverified host in
-      `docs/installation.md`.
+      At the time, whether real Claude Code still loads the skill from the
+      new path was inferred, not run — closed for real below.
+- [x] **The `skills/instinct/SKILL.md` question, actually settled — and a
+      much bigger, real bug found in the process.** The `claude` CLI is
+      installed on this machine; used it for real instead of continuing to
+      reason from Ponytail's example. `claude plugin validate
+      .claude-plugin/plugin.json` passed clean, with Claude Code's own
+      validator explicitly recommending `skills/<name>/SKILL.md` as the
+      way to ship context — confirming the move directly, first-party, not
+      inferred. Then went further: added this repo as a real local
+      marketplace (`claude plugin marketplace add .`) and ran
+      `claude plugin install instinct@instinct` for real.
+  - **It failed to load.** `.claude-plugin/plugin.json` declared
+    `"hooks": "./hooks/hooks.json"` explicitly — but Claude Code
+    auto-discovers `hooks/hooks.json` by that exact convention already,
+    and an explicit field pointing at the same default path isn't
+    redundant-but-harmless, it's a hard error ("Duplicate hooks file
+    detected"). This means **the core Claude Code plugin — the single
+    host this project has been most confident about all session — had
+    never actually been installed for real until this exact check**;
+    every previous "confirmed working" claim about it meant the hooks
+    were run standalone via `node` and `SKILL.md` was pasted into
+    Agent-tool prompts, not that the plugin itself loaded. Ponytail's own
+    manifest avoids this by naming its hooks file something else
+    (`hooks/claude-codex-hooks.json`); fixed here by dropping the field
+    entirely and relying on auto-discovery, matching the pattern
+    `skills/` already used.
+  - **Re-verified after the fix, not just assumed fixed**: uninstalled,
+    reinstalled, `claude plugin list --json` now shows `"enabled": true`,
+    and the real install cache
+    (`~/.claude/plugins/cache/instinct/instinct/0.1.0/`) physically
+    contains all 5 `skills/*/SKILL.md` directories and `hooks/` intact —
+    checked directly on disk, not inferred from a success message.
+  - Updated `tests/test_hooks_json.py` and
+    `tests/test_manifest_completeness.py`, whose old assertions assumed
+    the removed field's presence; both now assert the actual, corrected
+    contract. Cleaned the real environment back to its prior state
+    afterward (`claude plugin uninstall` + `marketplace remove`) rather
+    than leaving a user-scope side effect in place unannounced, since a
+    user-scope install applies to every project on the machine, not just
+    this repo — that's the requester's call, not something to leave
+    silently changed. `docs/installation.md`'s Claude Code section
+    corrected to stop overclaiming "confirmed" for something that had
+    never actually been run.
 - [x] **Skill family expanded, on direct instruction, ahead of ADR-0004's
       original "prove the ambient mechanism first" precondition being
       fully met.** That precondition hasn't changed — still no

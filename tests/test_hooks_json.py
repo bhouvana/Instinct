@@ -99,11 +99,31 @@ def test_every_plugin_manifest_is_valid_json():
         json.loads(path.read_text(encoding="utf-8"))  # raises on malformed JSON
 
 
-def test_claude_and_codex_manifests_share_the_same_hooks_file():
-    """Claude Code and Codex use an identical hook contract (confirmed
-    against Ponytail's own hooks/claude-codex-hooks.json, which both of its
-    manifests point at) — Instinct reuses hooks/hooks.json unchanged for
-    both rather than keeping two copies that could drift apart."""
+def test_claude_plugin_relies_on_hooks_auto_discovery_not_an_explicit_field():
+    """Real bug, found by actually installing this plugin via the real
+    `claude` CLI (claude plugin install), not by inspection: Claude Code
+    auto-discovers hooks/hooks.json by convention, and an explicit
+    "hooks" field pointing at that same default path is treated as a
+    *second* hooks file — "Duplicate hooks file detected" — which fails
+    the plugin's load entirely. Ponytail's own .claude-plugin/plugin.json
+    avoids this by naming its hooks file something other than the
+    auto-discovered default (hooks/claude-codex-hooks.json); ours is
+    literally named hooks/hooks.json, so the fix is to drop the field and
+    rely on auto-discovery, confirmed by reinstalling and seeing the
+    plugin load clean afterward."""
     claude = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert "hooks" not in claude, (
+        "Claude Code auto-discovers hooks/hooks.json; an explicit 'hooks' "
+        "field pointing at that same path is a duplicate-load error, not "
+        "a no-op — confirmed with the real claude CLI, not assumed"
+    )
+
+
+def test_codex_manifest_explicitly_declares_the_shared_hooks_file():
+    """Codex has no confirmed auto-discovery convention of its own (no
+    real Codex install was available to test against), so its manifest
+    keeps the explicit declaration Claude Code no longer needs — both end
+    up loading the exact same file, just via different mechanisms."""
     codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
-    assert claude["hooks"] == codex["hooks"] == "./hooks/hooks.json"
+    assert codex["hooks"] == "./hooks/hooks.json"
+    assert (ROOT / "hooks" / "hooks.json").exists()

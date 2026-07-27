@@ -151,10 +151,23 @@ As of this commit, the honest gaps are still the two that have been true
 for a while: no properly-powered Claude-side Layer 1/2 corpus pass, and no
 properly-powered Layer 3/4 program (individual verified findings keep
 accumulating in `docs/known-failure-modes.md`, which is real evidence, but
-not the same thing as a properly-powered program). Newer, smaller open
-questions: whether real Claude Code actually loads the skill correctly
-from its new `skills/instinct/SKILL.md` location (inferred from Ponytail's
-own layout, not run against real Claude Code from this environment), and
-whether ADR-0004's single-ambient-skill bet still holds now that the
-skill family has grown to four and plugin-tier hosts actually exist —
-no real user feedback exists yet either way.
+not the same thing as a properly-powered program).
+
+The `skills/instinct/SKILL.md` location question is now genuinely closed,
+not inferred: the `claude` CLI is installed on this machine, and using it
+for real (`claude plugin marketplace add .`, `claude plugin install`)
+found that **the Claude Code plugin had never actually loaded at all** —
+`.claude-plugin/plugin.json`'s explicit `"hooks"` field collided with
+Claude Code's own auto-discovery of that exact same file, a hard load
+error, not a redundant-but-harmless declaration. Fixed by dropping the
+field. Re-verified by reinstalling for real and checking the physical
+install cache on disk. This means every earlier "confirmed working" claim
+about the core Claude Code plugin specifically (not the hooks run
+standalone, not `SKILL.md` pasted into Agent-tool prompts — the actual
+plugin) was never actually true until this check. If something in this
+repo claims "confirmed" going forward, verify it was checked the way this
+was, not the way that wasn't.
+
+Remaining open question: whether ADR-0004's single-ambient-skill bet still
+holds now that the skill family has grown to four and plugin-tier hosts
+actually exist — no real user feedback exists yet either way.

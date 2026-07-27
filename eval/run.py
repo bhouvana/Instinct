@@ -108,6 +108,34 @@ TRIGGER: yes|no
 TIER: 1|2|3|n/a
 """
 
+# gate_tier.yaml is Layer 2 (RFC-0004/0005): "given it fired, what tier."
+# Asking the combined _TIER_PROMPT for these cases was a real bug, not a
+# hypothetical one — confirmed by actually running it: two scenarios
+# (gt-01, gt-05, both fully-specified single-step edits) got a real,
+# reasoned "TRIGGER: no" from a fresh model, leaving no TIER line at all
+# and turning into a bare parse error instead of a tier judgment. That
+# measures whether the model agrees the case would trigger, which this
+# corpus was never designed to test — a separate prompt that presupposes
+# the skill is already active removes the confound instead of coercing an
+# answer to a question this corpus isn't asking.
+_GATE_TIER_ONLY_PROMPT = """You are evaluating a Claude Skill's rules, not writing code. Below is a
+skill file (frontmatter + body). Assume this skill has already loaded and is
+active for the request below — do not judge whether it should have loaded.
+
+--- SKILL.md ---
+{skill}
+--- end SKILL.md ---
+
+Request: {request}
+Context: {context}
+
+Walk "The Gate" section's three questions against the request (and context,
+if given) and state which tier it lands in: 1, 2, or 3.
+
+Respond with exactly one line, nothing else:
+TIER: 1|2|3
+"""
+
 
 class ModelBackend(Backend):
     """Shared plumbing for anything that answers by calling a real model:
@@ -121,25 +149,18 @@ class ModelBackend(Backend):
     def _call_model(self, prompt: str) -> str:
         raise NotImplementedError
 
-    def _ask(self, request: str, context: Optional[str]) -> tuple[bool, Optional[int]]:
+    def should_trigger(self, request: str, context: Optional[str]) -> bool:
         prompt = _TIER_PROMPT.format(skill=self._skill_text, request=request, context=context or "none")
         text = self._call_model(prompt)
-        trigger = "TRIGGER: yes" in text
-        tier = None
-        for tok in ("1", "2", "3"):
-            if f"TIER: {tok}" in text:
-                tier = int(tok)
-        return trigger, tier
-
-    def should_trigger(self, request: str, context: Optional[str]) -> bool:
-        trigger, _ = self._ask(request, context)
-        return trigger
+        return "TRIGGER: yes" in text
 
     def classify_tier(self, request: str, context: Optional[str]) -> int:
-        _, tier = self._ask(request, context)
-        if tier is None:
-            raise ValueError("Model did not return a parseable TIER line")
-        return tier
+        prompt = _GATE_TIER_ONLY_PROMPT.format(skill=self._skill_text, request=request, context=context or "none")
+        text = self._call_model(prompt)
+        for tok in ("1", "2", "3"):
+            if f"TIER: {tok}" in text:
+                return int(tok)
+        raise ValueError("Model did not return a parseable TIER line")
 
 
 class ApiBackend(ModelBackend):

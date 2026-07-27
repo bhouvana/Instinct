@@ -63,3 +63,42 @@ def test_skill_md_referenced_by_eval_exists():
     (ApiBackend/OpenAICompatBackend read it) — catch it silently pointing
     nowhere before a real backend run does."""
     assert eval_run.SKILL_PATH.exists()
+
+
+class _FakeModelBackend(eval_run.ModelBackend):
+    """Returns a canned response instead of calling a real model, so
+    ModelBackend's prompt-building and response-parsing can be tested
+    without a key. `_skill_text` is required by both prompt templates."""
+
+    def __init__(self, response: str):
+        self._response = response
+        self._skill_text = "placeholder skill text"
+
+    def _call_model(self, prompt: str) -> str:
+        return self._response
+
+
+def test_classify_tier_uses_the_gate_tier_only_prompt_not_the_combined_one():
+    """Regression test for a real bug: classify_tier used to share a prompt
+    with should_trigger that asked about triggering too, so a model
+    reasonably answering "this wouldn't trigger" for a fully-specified
+    edit (gt-01, gt-05) left no TIER line at all — a bare parse error
+    instead of a tier judgment, for a corpus whose whole point (RFC-0005)
+    is "given it fired, what tier." classify_tier must get a tier even
+    from a response that never mentions triggering."""
+    backend = _FakeModelBackend("TIER: 1")
+    assert backend.classify_tier("Add *.log to .gitignore", None) == 1
+
+
+def test_classify_tier_raises_on_unparseable_response():
+    backend = _FakeModelBackend("I'm not sure.")
+    try:
+        backend.classify_tier("some request", None)
+        assert False, "expected ValueError"
+    except ValueError:
+        pass
+
+
+def test_should_trigger_still_parses_the_combined_prompt_response():
+    assert _FakeModelBackend("TRIGGER: yes\nTIER: 2").should_trigger("x", None) is True
+    assert _FakeModelBackend("TRIGGER: no\nTIER: n/a").should_trigger("x", None) is False

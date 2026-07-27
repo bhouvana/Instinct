@@ -85,35 +85,61 @@ canonical breaking-change example, RFC-0003).
 **Status**: resolved and confirmed at the N≥3 standard, on Claude,
 specifically. The strongest-evidence case in the corpus.
 
-## Methodology gap, not a Gate bug: `gt-01`/`gt-05` assume they already triggered
+## Resolved methodology bug: `gt-01`/`gt-05` assumed they already triggered
 
-The same two-sample evaluation that found the `gt-07` Q2 issue asked both
-the trigger question and the tier question for every `gate_tier.yaml`
-entry, which the corpus itself doesn't do — `gate_tier.yaml` has no
-`expected_trigger` field; it assumes each scenario already triggered and
-only grades the tier. Asked cold, both fresh samples said `gt-01` ("Add
-*.log to .gitignore") and `gt-05` (a fully-specified single-file rename)
-wouldn't trigger at all, which is a defensible reading given `trigger.yaml`'s
-own execution-only skip cases (`trg-03`, `trg-05`) look the same shape.
-Not a Gate defect — the Gate was never actually asked to classify these
-under `eval/run.py`'s real methodology, since `classify_tier()` doesn't
-call `should_trigger()` first. Worth a decision at some point: either add
-`expected_trigger` to every `gate_tier.yaml` entry, or accept that these
-two are informative but ungraded until it does.
+Found by a two-sample evaluation that asked both the trigger question and
+the tier question for every `gate_tier.yaml` entry (the same combined
+prompt `eval/run.py`'s `classify_tier()` used at the time) — which the
+corpus itself doesn't intend, per RFC-0005: `gate_tier.yaml` is Layer 2,
+"given it fired, what tier," with no `expected_trigger` field at all.
+Asked cold, both fresh samples said `gt-01` ("Add *.log to .gitignore")
+and `gt-05` (a fully-specified single-file rename) wouldn't trigger at
+all — a defensible reading given `trigger.yaml`'s own execution-only skip
+cases (`trg-03`, `trg-05`) look the same shape — which left no `TIER` line
+to parse and surfaced as a bare `ValueError`, not a tier judgment.
 
-## Watching, not confirmed: `trg-04` and payment-adjacent code
+This was a real bug in `eval/run.py`, not just a corpus-design footnote:
+`classify_tier()` shared one prompt with `should_trigger()` that asked
+about triggering regardless of which one was being tested, so any
+gate_tier scenario a model reasonably read as "wouldn't trigger" could
+turn into a spurious failure with no tier signal at all. Fixed by giving
+`classify_tier()` its own prompt (`_GATE_TIER_ONLY_PROMPT`) that tells the
+model to assume the skill is already active and asks only for the tier —
+removing the confound instead of coercing an answer to a question this
+corpus was never designed to ask. Re-verified with two fresh samples using
+the new prompt: both `gt-01` and `gt-05` now cleanly resolve to Tier 1,
+matching their labels, with no trigger-related noise at all.
 
-Not in `gate_tier.yaml` (no `expected_tier` to grade against), but the
-same two-sample run disagreed with itself on "Refactor the payment retry
-logic to use exponential backoff instead of fixed delay" — one sample said
-Tier 2, the other Tier 3, over whether touching code adjacent to payment
-without changing its interface "crosses" the trust boundary Q3 names
-explicitly (`auth, payment, deletion, data access`). N=1 disagreement is
-noise until it repeats, per this file's own governance, but it's the same
-shape as the already-fixed "public" association bug — a named trust-
-boundary word possibly pulling escalation by proximity rather than actual
-exposure. Not chased further now; sample this one again before touching
-anything.
+## Investigated and closed: `trg-04` was ambiguity, not a keyword-association bug
+
+`trg-04` is a `trigger.yaml`-only case (no `expected_tier` — it was never
+claiming a tier label), but an earlier two-sample tier probe on it
+disagreed with itself: one sample said Tier 2, the other Tier 3, on
+"Refactor the payment retry logic to use exponential backoff instead of
+fixed delay." That looked like the same shape as the already-fixed
+"public" association bug — a trust-boundary word (`payment`) pulling
+escalation by proximity rather than actual exposure — so it was worth
+checking rather than assuming.
+
+Follow-up with two more samples, holding the request's ambiguity fixed
+instead of leaving it open: given the *exact same request* but with the
+blast radius made explicit (no signature change, the actual
+payment-submission call is unchanged, only the retry-delay math moves),
+both samples cleanly agreed on Tier 1, explicitly reasoning that Q3 is no
+because "this is code merely adjacent to payment logic, not a change to
+the trust boundary itself." That's the opposite of a keyword-association
+bug — it shows the Gate correctly separates "near payment" from "crosses
+the payment boundary" once given enough information to do so.
+
+**Conclusion**: the original disagreement traces to the request itself
+being genuinely underspecified (does the refactor touch the payment call
+or not? the one-line request doesn't say), not to the Gate over-weighting
+the word "payment." Splitting under real ambiguity is arguably
+ADR-0006's escalate-on-uncertainty rule working as intended, not a defect
+to fix. No `SKILL.md` change made. If `trg-04` is ever promoted into
+`gate_tier.yaml` with a real `expected_tier`, its `context` field should
+state the blast radius explicitly, the same way `gt-04`'s already does —
+an ambiguous one-liner isn't a fair tier-accuracy test either way.
 
 ## What this catalog is not
 

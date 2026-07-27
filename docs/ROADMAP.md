@@ -691,6 +691,39 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     prints fabricated-looking numbers with no real measurement behind them
     would be exactly the "looks tested" theater this project argues
     against, not a fourth skill worth having.
+- [x] **Real judgment evidence, not more plumbing** — on direct instruction
+      to stop hardening infrastructure and grow the actual unproven part.
+      Two concrete results, both from real fresh-Claude sampling, not
+      authored guesses:
+  - **Found and fixed a real bug in `eval/run.py` itself**, not just in
+    `SKILL.md`. `classify_tier()` shared one prompt with `should_trigger()`
+    that asked about triggering regardless of which one was being tested.
+    `gate_tier.yaml` is Layer 2 by design (RFC-0005: "given it fired, what
+    tier"), so when a fresh model reasonably answered "this wouldn't
+    trigger" for `gt-01`/`gt-05` (both fully-specified single-step edits),
+    there was no `TIER` line to parse — a bare `ValueError`, not a tier
+    judgment, misrepresenting a measurement bug as a Gate failure. Fixed
+    with a dedicated `_GATE_TIER_ONLY_PROMPT` that presupposes the skill
+    is active and asks only for the tier, removing the confound instead of
+    coercing an answer to a question `gate_tier.yaml` was never designed
+    to ask. Added real unit test coverage for `ModelBackend` that didn't
+    exist before (only `StubBackend` had any). Re-verified with two fresh
+    samples using the new prompt: both `gt-01` and `gt-05` now cleanly
+    resolve to Tier 1, matching their labels — see
+    `docs/known-failure-modes.md`.
+  - **Investigated and closed `trg-04`'s payment-proximity disagreement**
+    rather than leaving it as a "watch this" item. Two more samples, same
+    request but with the blast radius made explicit (no signature change,
+    the payment-submission call itself unchanged), both cleanly agreed on
+    Tier 1 — the opposite of a keyword-association bug. Conclusion: the
+    original split traced to the request itself being genuinely
+    underspecified, which is ADR-0006's escalate-on-uncertainty rule
+    working as intended, not a defect. No `SKILL.md` change made — the
+    honest finding here is "this wasn't actually a bug," which is real
+    evidence too, not a null result.
+  - Three more Agent-tool calls this pass (~208K tokens total), all with
+    real, recorded outcomes in `docs/known-failure-modes.md` — the
+    ongoing cost/evidence tradeoff this project has tracked since RFC-0009.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

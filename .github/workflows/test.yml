@@ -40,3 +40,17 @@ jobs:
       - name: Test pi-extension
         working-directory: pi-extension
         run: npm test
+
+      - name: Judgment regression suite (RFC-0004/0005 corpus vs. a real model)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "No ANTHROPIC_API_KEY secret configured — skipping the real"
+            echo "judgment-regression pass against eval/corpus/. This is"
+            echo "expected until a key is added (see docs/ROADMAP.md); the"
+            echo "stub-backend harness plumbing is still covered by pytest."
+            exit 0
+          fi
+          pip install anthropic
+          python eval/run.py --backend api --samples 3

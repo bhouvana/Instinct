@@ -119,6 +119,43 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
       Anthropic key is available — would replace ad hoc Agent-tool spot
       checks with the automated, repeatable path `eval/run.py` was built
       for.
+- [x] **Judgment regression suite, wired and ready** — scoped and built in
+      response to a direct question about whether Instinct's judgment
+      mechanism itself (not the distribution plumbing) has real evidence
+      behind it, comparable to Ponytail's issue history and benchmark
+      suite. The honest answer was no: two real bugs found via ~20
+      scenarios sampled a handful of times isn't in the same league. This
+      closes the *readiness* gap, not the *evidence* gap, which still needs
+      an actual key:
+  - `.github/workflows/test.yml` now runs `eval/run.py --backend api
+    --samples 3` on every push and PR, gated on an `ANTHROPIC_API_KEY`
+    repository secret — skips cleanly with an explicit message if unset
+    (true today), turns on with zero further engineering the moment one is
+    added. Verified the skip branch actually behaves as written, and
+    confirmed `ApiBackend`'s own missing-key/missing-package guard is a
+    real fallback net if the CI conditional ever has a bug, not just
+    reasoned about.
+  - **Pass/fail policy written down**, not left implicit: N≥3 majority
+    vote per RFC-0004's amendment, a disagreement hard-fails the build (no
+    warn-only mode — a regression suite that can be ignored is a
+    suggestion), and a failure means investigate using
+    `docs/known-failure-modes.md`, not auto-revert. See `eval/README.md`.
+  - **`docs/known-failure-modes.md`** — consolidates `gt-03`'s and
+    `gt-07`'s actual regression history (dates, models, sample counts,
+    resolution) out of the RFC-0008–0011 narrative and into one scannable
+    file, distinct from the corpus's own `note` fields (which explain what
+    a case targets, not what's actually happened when a real model saw
+    it). Explicitly states what it doesn't cover: every other adversarial
+    case has real reasoning but has only been sampled once or twice,
+    mostly against the confirmed-noisy Ollama backend.
+  - **Deliberately not done**: padding the 21-scenario corpus toward
+    "hundreds." New labels need the same real-model verification the
+    regression suite itself needs — authoring more scenarios without a way
+    to verify them would be volume without evidence, the same trap flagged
+    when this work was scoped.
+  - Fixed `eval/README.md`'s stale claim that `ApiBackend` "raises
+    NotImplementedError" — it's been a real implementation since RFC-0009;
+    the doc had drifted from the code.
 - [x] **Layer 3/4 pilot, N=1** (`docs/rfcs/0012-layer34-pilot.md`) — one
       task, run twice (baseline vs. Instinct-loaded) in isolated worktrees
       against this repo's own now-real history. Clean contrast: baseline

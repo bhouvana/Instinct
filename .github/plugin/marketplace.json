@@ -1,0 +1,18 @@
+{
+  "name": "instinct",
+  "description": "Engineering judgment as a default instinct for AI coding agents.",
+  "owner": {
+    "name": "Instinct Project Contributors"
+  },
+  "plugins": [
+    {
+      "name": "instinct",
+      "description": "Establishes whether a change is the right one and the smallest correct version of it before implementation starts.",
+      "source": "./",
+      "category": "productivity",
+      "tags": ["engineering-judgment", "code-review", "productivity"],
+      "skills": "skills/",
+      "hooks": "hooks/copilot-hooks.json"
+    }
+  ]
+}

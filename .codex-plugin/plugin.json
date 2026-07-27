@@ -1,0 +1,25 @@
+{
+  "name": "instinct",
+  "version": "0.1.0",
+  "description": "Engineering judgment as a default instinct — Provenance, Judgment, and Efficiency before implementation, not a persona or a checklist you invoke.",
+  "author": {
+    "name": "Instinct Project Contributors"
+  },
+  "license": "MIT",
+  "keywords": ["engineering-judgment", "code-review", "productivity"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Instinct",
+    "shortDescription": "Engineering judgment as a default instinct",
+    "longDescription": "Establishes whether a change is the right one and the smallest correct version of it before implementation starts, via a three-question Gate and two tiers past it.",
+    "developerName": "Instinct Project Contributors",
+    "category": "Productivity",
+    "capabilities": ["Instructions", "Lifecycle hooks"],
+    "defaultPrompt": [
+      "Review this diff against the Gate.",
+      "Is this change consequential or critical?",
+      "Find the smallest correct implementation."
+    ]
+  }
+}

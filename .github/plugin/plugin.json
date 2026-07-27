@@ -1,0 +1,12 @@
+{
+  "name": "instinct",
+  "description": "Engineering judgment as a default instinct — Provenance, Judgment, and Efficiency before implementation, not a persona or a checklist you invoke.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Instinct Project Contributors"
+  },
+  "license": "MIT",
+  "keywords": ["engineering-judgment", "code-review", "productivity"],
+  "skills": "skills/",
+  "hooks": "hooks/copilot-hooks.json"
+}

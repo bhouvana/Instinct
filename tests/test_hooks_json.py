@@ -73,3 +73,37 @@ def test_every_hook_command_points_at_a_script_that_ships_in_hooks():
             assert match, f"cannot find a hooks/ script in command: {cmd}"
             script = ROOT / "hooks" / match.group(1)
             assert script.exists(), f"command references a missing hook script: {match.group(1)}"
+
+
+# Every plugin-tier manifest this repo ships, one per host. A syntax error in
+# any of these breaks that host's plugin install silently (most hosts don't
+# validate until a user actually tries to load it).
+PLUGIN_MANIFESTS = [
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
+    ".codex-plugin/plugin.json",
+    ".qoder-plugin/plugin.json",
+    ".github/plugin/plugin.json",
+    ".github/plugin/marketplace.json",
+    "gemini-extension.json",
+    "hooks/hooks.json",
+    "hooks/copilot-hooks.json",
+    "hooks/qoder-hooks.json",
+]
+
+
+def test_every_plugin_manifest_is_valid_json():
+    for rel in PLUGIN_MANIFESTS:
+        path = ROOT / rel
+        assert path.exists(), f"registered plugin manifest is missing: {rel}"
+        json.loads(path.read_text(encoding="utf-8"))  # raises on malformed JSON
+
+
+def test_claude_and_codex_manifests_share_the_same_hooks_file():
+    """Claude Code and Codex use an identical hook contract (confirmed
+    against Ponytail's own hooks/claude-codex-hooks.json, which both of its
+    manifests point at) — Instinct reuses hooks/hooks.json unchanged for
+    both rather than keeping two copies that could drift apart."""
+    claude = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    codex = json.loads((ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert claude["hooks"] == codex["hooks"] == "./hooks/hooks.json"

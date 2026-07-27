@@ -39,6 +39,7 @@ ADAPTERS = [
     (ROOT / ".kiro" / "steering" / "instinct.md", True),
     (ROOT / ".clinerules" / "instinct.md", True),
     (ROOT / ".github" / "copilot-instructions.md", True),
+    (ROOT / ".qoder" / "rules" / "instinct.md", True),
 ]
 
 HOST_SPECIFIC_RE = re.compile(

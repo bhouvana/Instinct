@@ -33,7 +33,22 @@ function getSkillBody(pluginRoot) {
   return stripSyncMarkers(raw).trim();
 }
 
+// GitHub Copilot CLI sets this env var for its own plugins; confirmed from
+// Ponytail's hooks/ponytail-runtime.js (isCopilot check), not guessed. Its
+// hook contract differs from Claude Code/Codex/Qoder's, which all accept the
+// same hookSpecificOutput-wrapped JSON (confirmed working for Claude Code by
+// this project's own tests): Copilot wants additionalContext unwrapped, and
+// only reads it on SessionStart — other events get an empty object, same as
+// Ponytail's own contract for it.
+const isCopilot = Boolean(process.env.COPILOT_PLUGIN_DATA);
+
 function emitAdditionalContext(hookEventName, context) {
+  if (isCopilot) {
+    process.stdout.write(
+      JSON.stringify(hookEventName === "SessionStart" && context ? { additionalContext: context } : {})
+    );
+    return;
+  }
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: { hookEventName, additionalContext: context },
@@ -41,4 +56,4 @@ function emitAdditionalContext(hookEventName, context) {
   );
 }
 
-module.exports = { stripFrontmatter, stripSyncMarkers, getSkillBody, emitAdditionalContext };
+module.exports = { stripFrontmatter, stripSyncMarkers, getSkillBody, emitAdditionalContext, isCopilot };

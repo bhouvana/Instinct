@@ -1,0 +1,26 @@
+{
+  "_comment": "Reference template — copy the 'hooks' object into your .qoder/settings.json or ~/.qoder/settings.json. Replace INSTINCT_DIR with the path to your instinct checkout (e.g. ~/.qoder/plugins/instinct).",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node INSTINCT_DIR/hooks/instinct-qoder-activate.js"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "task|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node INSTINCT_DIR/hooks/instinct-subagent.js"
+          }
+        ]
+      }
+    ]
+  }
+}

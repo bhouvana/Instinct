@@ -22,17 +22,22 @@ SUBAGENT_HOOK = ROOT / "hooks" / "instinct-subagent.js"
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
 
 
-def run_hook(plugin_root: Path) -> subprocess.CompletedProcess:
+def run_hook(plugin_root: Path, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["node", str(HOOK)],
-        env={"CLAUDE_PLUGIN_ROOT": str(plugin_root)},
+        env={"CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})},
         capture_output=True,
         text=True,
     )
 
 
-def run_subagent_hook(plugin_root: Path, stdin: str = "", matcher: str | None = None) -> subprocess.CompletedProcess:
-    env = {"CLAUDE_PLUGIN_ROOT": str(plugin_root)}
+def run_subagent_hook(
+    plugin_root: Path,
+    stdin: str = "",
+    matcher: str | None = None,
+    extra_env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess:
+    env = {"CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})}
     if matcher is not None:
         env["INSTINCT_SUBAGENT_MATCHER"] = matcher
     return subprocess.run(
@@ -142,3 +147,23 @@ def test_subagent_hook_self_exits_when_stdin_never_closes():
     assert proc.returncode == 0
     payload = json.loads(stdout)
     assert "## The Gate" in payload["hookSpecificOutput"]["additionalContext"]
+
+
+def test_hook_uses_copilot_unwrapped_shape_when_copilot_env_present():
+    """GitHub Copilot CLI's hook contract differs from Claude Code/Codex/
+    Qoder's: it reads `additionalContext` unwrapped, not inside
+    hookSpecificOutput. Confirmed from Ponytail's actual
+    hooks/ponytail-runtime.js (the isCopilot branch), not guessed."""
+    result = run_hook(ROOT, extra_env={"COPILOT_PLUGIN_DATA": "1"})
+    payload = json.loads(result.stdout)
+    assert "hookSpecificOutput" not in payload
+    assert "## The Gate" in payload["additionalContext"]
+
+
+def test_subagent_hook_emits_empty_object_under_copilot():
+    """Copilot only reads additionalContext on SessionStart; every other
+    event (SubagentStart included) must get an empty object rather than
+    context Copilot won't act on, matching Ponytail's own contract."""
+    result = run_subagent_hook(ROOT, extra_env={"COPILOT_PLUGIN_DATA": "1"})
+    assert result.returncode == 0
+    assert json.loads(result.stdout) == {}

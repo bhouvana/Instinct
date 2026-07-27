@@ -22,6 +22,7 @@ TARGETS = {
     ".kiro/steering/instinct.md": "Kiro",
     ".clinerules/instinct.md": "Cline",
     ".github/copilot-instructions.md": "GitHub Copilot",
+    ".qoder/rules/instinct.md": "Qoder",
 }
 
 

@@ -22,14 +22,14 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements-dev.txt
 
-      - name: Check adapter sync (SKILL.md vs. AGENTS.md/.cursor/.windsurf/...)
+      - name: Check adapter sync (SKILL.md vs. AGENTS.md/.cursor/.windsurf/.qoder/...)
         run: python scripts/check_adapters.py
 
-      - name: Validate plugin manifests are well-formed JSON
-        run: |
-          python -c "import json; json.load(open('.claude-plugin/plugin.json'))"
-          python -c "import json; json.load(open('.claude-plugin/marketplace.json'))"
-          python -c "import json; json.load(open('hooks/hooks.json'))"
-
-      - name: Run test suite
+      - name: Run test suite (includes plugin-manifest JSON validation)
         run: python -m pytest tests/ -v
+
+      - name: Install and test instinct-mcp
+        working-directory: instinct-mcp
+        run: |
+          npm install
+          npm test

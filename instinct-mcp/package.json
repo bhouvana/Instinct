@@ -1,0 +1,13 @@
+{
+  "name": "instinct-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that serves Instinct's Gate as a prompt and a tool, for hosts with no file-based rule mechanism and no hook lifecycle.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": { "test": "node --test ./test/" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.23.0"
+  }
+}

@@ -167,3 +167,21 @@ def test_subagent_hook_emits_empty_object_under_copilot():
     result = run_subagent_hook(ROOT, extra_env={"COPILOT_PLUGIN_DATA": "1"})
     assert result.returncode == 0
     assert json.loads(result.stdout) == {}
+
+
+def test_hooks_use_native_shape_under_codex_env():
+    """Codex sets PLUGIN_DATA (confirmed from Ponytail's isCodex check in
+    hooks/ponytail-runtime.js) but needs no output-shape branch: its
+    hookSpecificOutput.additionalContext contract is identical to native
+    Claude Code's, so both hooks should behave exactly as they do without
+    PLUGIN_DATA set at all. Verifies the reasoning behind adding no Codex
+    branch to emitAdditionalContext, not just asserting it by inspection."""
+    hook_result = run_hook(ROOT, extra_env={"PLUGIN_DATA": "/tmp/fake-codex-state"})
+    hook_payload = json.loads(hook_result.stdout)
+    assert hook_payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    assert "## The Gate" in hook_payload["hookSpecificOutput"]["additionalContext"]
+
+    subagent_result = run_subagent_hook(ROOT, extra_env={"PLUGIN_DATA": "/tmp/fake-codex-state"})
+    subagent_payload = json.loads(subagent_result.stdout)
+    assert subagent_payload["hookSpecificOutput"]["hookEventName"] == "SubagentStart"
+    assert "## The Gate" in subagent_payload["hookSpecificOutput"]["additionalContext"]

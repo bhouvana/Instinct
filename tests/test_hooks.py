@@ -9,6 +9,7 @@ the whole suite over an optional runtime.
 """
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -26,7 +27,14 @@ pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not o
 def run_hook(plugin_root: Path, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["node", str(HOOK)],
-        env={"CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})},
+        # Real bug, found by CI failing on Linux while passing here on
+        # Windows: env={...} *replaces* the child's entire environment, not
+        # just adds to it. With no PATH at all, POSIX's execvpe can't find
+        # "node" anywhere and raises FileNotFoundError — Windows' process
+        # creation apparently falls back to the launching process's own
+        # PATH regardless of what's passed, which is why this stayed
+        # invisible on this dev machine the whole time it was broken.
+        env={**os.environ, "CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})},
         capture_output=True,
         text=True,
     )
@@ -38,7 +46,7 @@ def run_subagent_hook(
     matcher: str | None = None,
     extra_env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess:
-    env = {"CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})}
+    env = {**os.environ, "CLAUDE_PLUGIN_ROOT": str(plugin_root), **(extra_env or {})}
     if matcher is not None:
         env["INSTINCT_SUBAGENT_MATCHER"] = matcher
     return subprocess.run(
@@ -136,7 +144,7 @@ def test_subagent_hook_self_exits_when_stdin_never_closes():
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env={"CLAUDE_PLUGIN_ROOT": str(ROOT), "INSTINCT_SUBAGENT_MATCHER": "general-purpose"},
+        env={**os.environ, "CLAUDE_PLUGIN_ROOT": str(ROOT), "INSTINCT_SUBAGENT_MATCHER": "general-purpose"},
         text=True,
     )
     try:
@@ -191,7 +199,7 @@ def test_hooks_use_native_shape_under_codex_env():
 def run_qoder_hook(plugin_root: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["node", str(QODER_HOOK)],
-        env={"CLAUDE_PLUGIN_ROOT": str(plugin_root)},
+        env={**os.environ, "CLAUDE_PLUGIN_ROOT": str(plugin_root)},
         capture_output=True,
         text=True,
     )

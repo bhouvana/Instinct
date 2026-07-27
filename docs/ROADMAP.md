@@ -307,6 +307,20 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
     promptly — plausible on Windows, per Ponytail's own account of the
     failure — and would otherwise have shipped silently, since every
     existing test closed stdin normally and none of them hit this path.
+  - **ADOPT: `tests/hooks-windows.test.js`'s command-syntax checks
+    (`tests/test_hooks_json.py`).** Ported the four static checks that
+    aren't about the stdin bug — no cmd.exe `%VAR%` in `commandWindows`, no
+    POSIX-only guard syntax in the shared `command`, no bash-only `exec`
+    prefix and no dangling shell wrapper, every referenced script actually
+    exists under `hooks/` — as pure-Python checks against
+    `hooks/hooks.json`, since they're string patterns in JSON and need no
+    Node. Confirmed they pass against the current file, then confirmed
+    they actually catch injected drift (rewrote `commandWindows` to use
+    `%CLAUDE_PLUGIN_ROOT%` and watched the `%VAR%` check fail), not just
+    that they pass once. Kept in a separate file from `test_hooks.py`
+    rather than added to it, since that file's Node-availability skip
+    marker doesn't apply here — these checks have nothing to do with Node
+    being on `PATH`.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

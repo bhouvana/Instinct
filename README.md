@@ -1,54 +1,81 @@
-# Instinct
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+  <img alt="Instinct" src="assets/logo.svg" width="420">
+</picture>
 
-A Claude Skill that installs engineering judgment as a default instinct,
-not a checklist you have to invoke.
+Engineering judgment as a default instinct for AI coding agents — installed
+as ambient behavior, not a persona, a checklist, or a slash command you have
+to remember to invoke.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-informational)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-91%20passing-success)](tests/)
+[![Status](https://img.shields.io/badge/status-pre--alpha-yellow)](docs/ROADMAP.md)
+[![Hosts](https://img.shields.io/badge/hosts-14-blue)](docs/installation.md)
 
 > Engineering is not writing code. Engineering is making good decisions.
-> Everything else is a consequence.
+> Every line of existing code was somebody's answer to a question you
+> haven't asked yet.
 
-## Status
-
-Pre-alpha, but functional. Design (RFC-0001–0007) is locked. `SKILL.md` has
-survived four rounds of real, repeat-sampled evaluation (two real bugs
-found and fixed, not hypothesized) and two real-repo pilots showing a
-consistent pattern against baseline. Distributed to seven file-based hosts
-(Claude Code, Cursor, Windsurf, Kiro, Cline, Copilot, Qoder) via a
-canonical body kept in sync by a checker that's been proven to actually
-catch drift, plus plugin-tier support for Codex, GitHub Copilot CLI,
-Gemini CLI, OpenCode, the pi editor, and Hermes Agent, and an MCP server
-(`instinct-mcp/`) for hosts with no file-based rule mechanism. Installable
-as a real Claude Code plugin. Has a companion skill for reviewing
-already-made changes and one for quick reference. Has a real pytest suite
-for its own tooling, plus Node test suites for `instinct-mcp/` and
-`pi-extension/`. See `docs/installation.md` for how to actually set up
-each host — confirmed-vs-inferred, since not every one has been run
-against real host software from this environment. Full history in
-`docs/rfcs/`; what's still open is in `docs/ROADMAP.md` — full Claude-side
-Layer 1/2 corpus coverage and a properly powered Layer 3/4 program are the
-two honest gaps.
+---
 
 ## What this is
 
 Most coding assistants optimize for implementation: given a request, they
 build it. Instinct changes the default so that, before any code is written,
-Claude instinctively asks the questions a Staff Engineer asks without being
+Claude instinctively asks the questions a staff engineer asks without being
 prompted to — why does this code exist, is this actually the right fix, does
 an abstraction for this already exist, what's the smallest correct change.
 
-Two compiled sentences carry the philosophy (`docs/rfcs/0001-charter.md`):
+Two compiled sentences carry the philosophy
+(see [`docs/rfcs/0001-charter.md`](docs/rfcs/0001-charter.md)):
 
-- **Identity:** Engineering is not writing code. Engineering is making good
+- **Identity** — Engineering is not writing code. Engineering is making good
   decisions.
-- **Operational maxim:** Every line of existing code was somebody's answer
+- **Operational maxim** — Every line of existing code was somebody's answer
   to a question you haven't asked yet.
 
-Underneath them, a mechanical procedure — a three-question Gate followed by
-two tiers of behavior — turns Provenance, Judgment, and Efficiency from
-named virtues into something checkable, with explicit guardrails so
-"judgment" degrades toward neither negligence (skipping it) nor
-contrarianism (applying it uniformly regardless of stakes). See
-`docs/rfcs/0003-mechanism-design.md`, and `SKILL.md` for where it actually
-landed.
+Underneath them sits a mechanical procedure, not a vibe: a three-question
+Gate, followed by two tiers of behavior once you're past it. It turns
+Provenance, Judgment, and Efficiency from named virtues into something
+checkable — with explicit guardrails so "judgment" degrades toward neither
+negligence (skipping it) nor contrarianism (applying it uniformly regardless
+of stakes).
+
+## The Gate
+
+This is the entire mechanism. Everything else in this repository exists to
+deliver it, verify it, or carry it to another host.
+
+Ask, **in order**, about the request in front of you. Answer by looking at
+what the change actually touches, not by trusting the request's phrasing.
+**Stop at the first yes. Treat an unclear answer as yes.**
+
+```
+1. Does this touch anything beyond what was explicitly named?
+2. Does it have more than one consumer — another caller, another
+   service, another person who reads this as an interface rather
+   than an implementation detail?
+3. Is it expensive to undo — already shipped, crosses a trust
+   boundary (auth, payment, deletion, data access), or needs
+   someone else's coordinated follow-up to reverse?
+
+   no · no · no  →  implement directly, nothing else applies
+   yes to Q1/Q2  →  Consequential  (reuse-check, minimal diff, state why)
+   yes to Q3     →  Critical       (reconstruct why, name the alternative,
+                                     deposit the reasoning somewhere durable)
+```
+
+Two carve-outs exist specifically because real evaluation caught the Gate
+over-escalating for the wrong reason, and both are load-bearing, not
+decorative: a **public or heavily-used surface isn't automatically a yes to
+Q2** (a signup form having many users isn't the same as another piece of
+code depending on it as an interface), and a **sensitive-sounding surface
+isn't automatically a yes to Q3** (tightening validation with no required
+caller changes is usually a no, even on a security-adjacent surface — but a
+new *required* parameter is a yes regardless of how additive it sounds). The
+full text, with the rest of the tier obligations, `Bug fixes`, `Never`, and
+`Scope` sections, lives in [`skills/instinct/SKILL.md`](skills/instinct/SKILL.md) —
+that file is the actual artifact; everything above is a summary of it.
 
 ## What this is not
 
@@ -57,16 +84,101 @@ landed.
 - A "senior engineer" persona or tone change.
 - A code-size minimizer — see
   [Ponytail](https://github.com/DietrichGebert/ponytail) for that, which
-  this project is designed to compose with, not replace.
+  this project is designed to compose with, not replace. Ponytail asks
+  "is this the smallest correct version"; Instinct asks "is this the right
+  change and how much scrutiny does it deserve" — a layer earlier.
 - A way to make Claude slower or more argumentative on every request.
-  Proportional to stakes is a hard constraint, not a suggestion.
+  Proportional to stakes is a hard constraint, not a suggestion — the fast
+  exit (no to all three questions) is deliberately as cheap as the Gate
+  itself.
+
+## The skill family
+
+| Skill | Invocation | What it does |
+|---|---|---|
+| `instinct` | ambient | The Gate itself — applies before a change is made. |
+| `instinct-review` | explicit | Audits one already-made diff against the Gate. |
+| `instinct-audit` | explicit | The same question at repo/history scale: did recent Critical-tier-shaped commits actually leave the provenance the Gate obligates? |
+| `instinct-debt` | explicit | Harvests `instinct:` accepted-limitation markers into a ledger, so a scoped-for-now tradeoff can't quietly become permanent. |
+| `instinct-help` | explicit | One-screen quick reference — the Gate, the tiers, without re-reading `SKILL.md` or the RFCs. |
+
+Deliberately missing two things a Ponytail-inspired reader might expect: no
+user-selectable intensity modes (`/instinct lite|full|ultra`), and no
+`instinct-gain` scoreboard — see [`docs/ROADMAP.md`](docs/ROADMAP.md) for
+why both were considered and rejected rather than silently never brought up.
+
+## Where it runs
+
+Distributed to **14 hosts** across two delivery mechanisms, kept in sync
+automatically rather than hand-maintained:
+
+**7 file-based hosts** read `AGENTS.md` (the canonical consolidated body) or
+a thin per-host copy of it — Claude Code, Cursor, Windsurf, Kiro, Cline,
+GitHub Copilot, Qoder. `scripts/check_adapters.py` proves every copy stays
+byte-identical to `skills/instinct/SKILL.md`, not just once but on every
+change — and has itself been tested to actually catch injected drift, not
+just pass when nothing's wrong.
+
+**7 plugin-tier hosts** get real manifests and lifecycle hooks — Claude
+Code (`.claude-plugin/`), Codex, GitHub Copilot CLI, Qoder, Gemini CLI,
+OpenCode, the pi editor, and Hermes Agent — plus an MCP server
+(`instinct-mcp/`) for any host with no file-based rule mechanism and no hook
+lifecycle to piggyback on.
+
+Every one of these has been verified by actually running it — not just
+written and assumed correct. That includes installing the real Claude Code
+plugin with the `claude` CLI, which caught a genuine load-failure bug
+(`hooks/hooks.json` declared both explicitly and via auto-discovery, a hard
+conflict) that had gone unnoticed because nobody had actually installed it
+before. See [`docs/installation.md`](docs/installation.md) for exactly what's
+**confirmed** (actually run, output inspected) versus **inferred** (follows
+from a documented contract, not run against real host software from this
+environment) for every host — that distinction is maintained deliberately,
+not glossed over.
+
+## How we know it works (and what we're honest about not knowing yet)
+
+- `SKILL.md` has survived multiple rounds of real, repeat-sampled
+  evaluation against fresh model instances — three real bugs found and
+  fixed, not hypothesized, each confirmed and re-verified after the fix,
+  not just patched and assumed. Full history in
+  [`docs/known-failure-modes.md`](docs/known-failure-modes.md).
+- Two real-repo pilots (one on this repo, one on
+  `tiangolo/full-stack-fastapi-template` — the same repo Ponytail's own
+  benchmark uses) show a consistent pattern: Instinct-loaded sessions add a
+  verification step baseline skips, and once caught a real security issue
+  baseline missed entirely.
+- A judgment regression suite (`eval/run.py`) is wired into CI, gated on an
+  `ANTHROPIC_API_KEY` secret — it skips cleanly today because there isn't
+  one, and turns on with zero further engineering the moment there is.
+- **The honest gap**: no properly-powered Claude-side evaluation program
+  exists yet — what exists is real, individually-verified findings
+  accumulating one at a time, which is evidence, but slower and smaller
+  than a real benchmark suite would produce. This is stated here on
+  purpose, not buried in `docs/ROADMAP.md` alone.
+
+## Installation
+
+See [`docs/installation.md`](docs/installation.md) for exact steps per host,
+each one marked confirmed or inferred. Quick version for Claude Code:
+
+```bash
+claude plugin marketplace add /path/to/this/checkout
+claude plugin install instinct@instinct
+```
+
+Installs at user scope by default, applying the ambient Gate to every
+project on the machine — pass `-s project` to scope it to one repo instead.
 
 ## Project structure
 
 ```
-skills/instinct/SKILL.md
-                       the skill itself, Claude Code-native — read this
-                       first if you just want to know what it does
+skills/
+  instinct/            the Gate itself — SKILL.md, Claude Code-native
+  instinct-review/      audit an already-made diff against the Gate
+  instinct-audit/       the same question at repo/history scale
+  instinct-debt/        harvest instinct: accepted-limitation markers
+  instinct-help/        quick reference — explicit invocation, not ambient
 AGENTS.md              canonical instruction-tier body — Critical-tier
                        detail consolidated (inlined), not pointed to,
                        for hosts with no matching step (RFC-0007)
@@ -86,28 +198,28 @@ instinct-mcp/          MCP server (prompt + tool) for hosts with no
                        file-based rule mechanism — its own npm package
 .opencode/plugins/     OpenCode server plugin
 pi-extension/          pi editor extension
-skills/
-  instinct/            the ambient Gate itself (see above)
-  instinct-review/     audit an already-made diff against the Gate
-  instinct-audit/      the same question at repo/history scale, not one diff
-  instinct-debt/       harvest instinct: accepted-limitation markers into a ledger
-  instinct-help/       quick reference — explicit invocation, not ambient
 references/            detail SKILL.md defers to when a Critical-tier
                        request actually needs it
 scripts/
   check_adapters.py    sync checker — all adapters vs. SKILL.md
-  generate_adapters.py regenerates the plain-markdown adapters from AGENTS.md
   check_versions.py    every host manifest's version field must agree
-tests/                 pytest suite for the tooling itself (52 tests total,
-                       including instinct-mcp/test/ and pi-extension/test/)
+  generate_adapters.py regenerates the plain-markdown adapters from AGENTS.md
+  test_all.py          runs the entire suite in one local command
+tests/                 pytest suite for the tooling itself (85 tests),
+                       plus instinct-mcp/test/ and pi-extension/test/
+                       (6 more, Node) — 91 total
 eval/
   corpus/              labeled scenarios (RFC-0005) — what "correct" means,
                        locked before SKILL.md was written (ADR-0009)
-  run.py               the corpus runner — stub backend proven, real API
-                       backend implemented but not yet run (no key here)
+  run.py               the corpus runner — stub, real Anthropic, and
+                       OpenAI-compatible backends
 docs/
   rfcs/                design proposals — the "what and why"
   adrs/                point-in-time decisions and the alternatives that lost
+  installation.md      per-host setup, confirmed vs. inferred
+  known-failure-modes.md  specific scenarios that have actually fooled
+                       real models, with dates, models, and fixes
+  ROADMAP.md           the live task list — what's done, open, and why
 ```
 
 ## Reading order
@@ -125,7 +237,7 @@ turns that signal into a confirmed bug, and finds a second bug hiding in
 the first fix's own wording — read this one for the sharpest example in
 the whole project of why a single test pass isn't evidence) →
 `docs/rfcs/0011` (the fix confirmed, this time at N=10 instead of N=1 or
-N=3) → `docs/rfcs/0007` (multi-platform distribution) preceded by
+N=3) → `docs/rfcs/0007` (multi-platform distribution), preceded by
 `docs/adrs/0012-defer-platform-adapters-pending-rfc.md`, which explains why
 that RFC exists instead of a batch of adapter files. Each RFC's `Depends
 on` / `Blocks` header lines say why that order, and each has one or more
@@ -134,9 +246,19 @@ inside it — read the RFC first, the ADRs are the "why not the obvious
 alternative" footnotes, not prerequisites.
 
 If you just want the artifact itself rather than the reasoning behind it:
-`SKILL.md`, then `references/` only if a Critical-tier example doesn't
-make sense on its own.
+[`skills/instinct/SKILL.md`](skills/instinct/SKILL.md), then `references/`
+only if a Critical-tier example doesn't make sense on its own.
+
+## Contributing
+
+This project holds itself to one standard throughout its own history: every
+"sync," "verification," or "confirmed" claim has actually been run,
+including proving the negative case (a checker is tested to confirm it
+*catches* drift, not just that it passes when nothing's wrong). Read
+[`CLAUDE.md`](CLAUDE.md) for the working norms this repo has accumulated
+before assuming something is undecided — it's written for exactly that
+purpose.
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [`LICENSE`](LICENSE).

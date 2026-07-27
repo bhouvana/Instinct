@@ -1,0 +1,16 @@
+<svg width="560" height="120" viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Instinct">
+  <title>Instinct</title>
+  <!-- The Gate, drawn literally: three checkpoints in a row, stop at the
+       first filled one ("stop at the first yes"). The line dims after the
+       filled diamond, showing the rest of the chain doesn't get evaluated. -->
+  <g stroke="#1a1a1a" stroke-width="3" fill="none">
+    <line x1="46" y1="60" x2="66" y2="60"/>
+    <line x1="106" y1="60" x2="126" y2="60"/>
+  </g>
+  <g stroke="#1a1a1a" stroke-width="3">
+    <rect x="12" y="46" width="28" height="28" transform="rotate(45 26 60)" fill="none"/>
+    <rect x="72" y="46" width="28" height="28" transform="rotate(45 86 60)" fill="none"/>
+    <rect x="132" y="46" width="28" height="28" transform="rotate(45 146 60)" fill="#1a1a1a"/>
+  </g>
+  <text x="196" y="76" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="52" letter-spacing="-1" fill="#1a1a1a">Instinct</text>
+</svg>

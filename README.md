@@ -286,6 +286,17 @@ If you just want the artifact itself rather than the reasoning behind it:
 [`skills/instinct/SKILL.md`](skills/instinct/SKILL.md), then `references/`
 only if a Critical-tier example doesn't make sense on its own.
 
+## Landing page
+
+[`site/index.html`](site/index.html) is a single self-contained static
+page (zero build step — deploy the repo to Vercel as-is, `vercel.json`
+points it at `site/`). It carries the same content and the same honesty
+rule as this README: every install command is labeled **confirmed**
+(actually run against real host software) or **inferred**, and there's no
+fabricated benchmark chart — the "Evidence" section is the same real,
+individually-verified data as above, not a marketing number invented to
+match Ponytail's.
+
 ## Contributing
 
 This project holds itself to one standard throughout its own history: every

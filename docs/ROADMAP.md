@@ -492,6 +492,104 @@ more than once (RFC-0001's Forward Plan; ADR-0012).
   40 tests pass across the whole suite (`tests/`, `instinct-mcp/test/`,
   `pi-extension/test/`) after this phase, all added or extended in this
   pass, not carried over unchanged.
+- [x] **Engineering-parity sweep** — on direct instruction to treat Ponytail
+      as a production-engineering reference rather than an inspiration:
+      read every remaining unexamined mechanism (root `package.json`,
+      `.github/workflows/publish.yml`, `after-install.md`, and the test
+      files for every host adapter Instinct now has an equivalent of —
+      `qoder-plugin.test.js`, `gemini-extension.test.js`,
+      `opencode-plugin.test.js`, `hermes-plugin.test.js`,
+      `copilot-plugin.test.js`, `package.test.js`,
+      `package-scripts.test.js`, `commands.test.js`,
+      `behavior.test.js`/`correctness.test.js`, `ponytail-debt/SKILL.md`),
+      decided ADOPT/REJECT/DEFER on each with the underlying failure mode
+      named, and implemented+tested the real gaps immediately rather than
+      batching the research:
+  - **ADOPT: `scripts/test_all.py`.** Ponytail's root `package.json` runs
+    its whole test suite (JS + two subpackages) with one `npm test`;
+    Instinct had no equivalent single command, so reproducing CI locally
+    meant reading the workflow YAML. Found a real bug writing it:
+    `subprocess.run(["npm", ...])` fails on Windows with a bare
+    `FileNotFoundError` (npm is a `.cmd` wrapper `CreateProcess` won't
+    resolve without a shell) — fixed with `shutil.which()` resolution.
+  - **ADOPT: `tests/test_ci_workflow.py`.** From
+    `tests/package-scripts.test.js`, which exists because Ponytail's own
+    aggregate test script and CI once silently stopped covering a
+    subpackage. Scans the filesystem for `package.json` files with a test
+    script (not a hardcoded list) and asserts each has a matching,
+    correctly-ordered CI step and a reference in `test_all.py` — so a
+    third subpackage added later fails loudly instead of silently passing
+    around the part nobody wired up. Confirmed it actually catches drift
+    (deleted a CI step in a throwaway mutation, watched it fail, restored
+    via `git checkout`) — and hit a real PyYAML gotcha doing so: re-dumping
+    parsed YAML turned the bare `on:` key into `true:`, restored from git
+    rather than the round-tripped copy.
+  - **ADOPT: `tests/test_manifest_completeness.py`.** From
+    `qoder-plugin.test.js`/`copilot-plugin.test.js`/`gemini-extension.test.js`:
+    a manifest can be valid JSON while its `skills`/`hooks`/`rules` field
+    points at something that no longer exists, or a hooks config
+    references a stale script name — neither is a JSON parse error.
+    Found a real bug in the test itself while writing it:
+    `str.lstrip("./")` strips a character set, not a prefix, so it silently
+    ate the leading `.` off `.qoder/rules/` too. Caught by running it, not
+    by inspection.
+  - **ADOPT (fixed a real gap): Hermes plugin completeness.**
+    `hermes-plugin.test.js` reads the actual `skills/` directory listing
+    and cross-checks it against `plugin.yaml`, catching a new skill
+    directory added but never registered. `test_hermes_plugin.py` only
+    checked the other direction (every *listed* skill exists) — added the
+    missing direction, confirmed it catches an unregistered skill dir via
+    a throwaway mutation.
+  - **ADOPT: `docs/installation.md`.** From `after-install.md` — an install
+    needing a manual activation step, documented nowhere general-purpose,
+    is indistinguishable from broken. Consolidates what was scattered
+    across `hooks/qoder-hooks.json`'s `_comment`, a plugin file's header
+    comment, and `instinct-mcp/README.md`, marking each host's confidence
+    level (confirmed vs. inferred — most plugin-tier hosts have never
+    actually been run from this environment) rather than presenting
+    guesses with the same confidence as tested facts. Names the real
+    unsolved problem: no plugin-tier host can be installed by a third
+    party without cloning this repo, since nothing is published anywhere.
+    `tests/test_doc_file_references.py` regression-tests its own path
+    claims — caught two real mistakes while writing it (referencing
+    Ponytail's own files as if they were this repo's) before they shipped.
+  - **REJECT (precondition doesn't exist): `commands.test.js` equivalent.**
+    Exists because a pi-registered command with no matching
+    `commands/*.toml`/`.opencode/command/*.md` file drifted silently in
+    Ponytail. Instinct's `pi-extension/` registers zero commands by design
+    (ADR-0004: no command family for v1) — the failure mode needs a
+    command-registration surface to drift from, and there isn't one.
+  - **REJECT (already covered, differently): `behavior.test.js` /
+    `correctness.test.js` equivalent.** These test whether Ponytail's own
+    benchmark auto-grader can tell good code from bad for its curated
+    tasks — infrastructure for its separate marketing/benchmark suite, out
+    of scope per this project's own earlier decision to not chase
+    Ponytail's benchmark tooling. The equivalent concern for Instinct's
+    actual judgment corpus ("does the grading logic work") is already
+    covered by `tests/test_eval_run.py` against `eval/run.py`.
+  - **REJECT (nothing to harvest yet): `ponytail-debt`/`instinct:` marker
+    ledger.** Read `skills/ponytail-debt/SKILL.md`: it harvests every
+    `ponytail:` shortcut-marker comment into a ledger so a deferral can't
+    quietly become permanent. Instinct has the same underlying convention,
+    narrower in scope (`references/provenance-out.md`'s `instinct:` marker,
+    Critical-tier accepted-limitations only, not any shortcut at any
+    tier) — but a repo-wide grep confirms zero `instinct:` markers exist
+    anywhere in the codebase yet. Building a harvester for a ledger with
+    nothing in it is the same scaffolding-not-verification call already
+    made for `check-versions.js` before Phase 3 gave it something to
+    check. Revisit once markers actually start accumulating.
+  - **DEFER (no consumer yet): `.github/workflows/publish.yml` (npm
+    trusted publishing via OIDC).** A genuinely good pattern — no stored
+    npm token, provenance attached automatically, tag-triggered — but
+    `instinct-mcp/` is `"private": true` and published nowhere. Building a
+    secretless publish pipeline for a package nobody can install via a
+    registry yet would be building a capability, not fixing a failure
+    mode Instinct currently has. Tied to the same open question
+    `docs/installation.md` names: real third-party installability needs
+    actual npm publishing first, which is a product decision, not a
+    hygiene one.
+  - 63 tests pass after this sweep, all newly added or extended, not
+    carried over.
 - [ ] Public release checklist — deferred until the above are stable.
 
 ## Explicitly deferred, not forgotten

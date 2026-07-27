@@ -59,7 +59,11 @@ copilot plugin install instinct@instinct
 
 ## Qoder (plugin-tier)
 
-`.qoder-plugin/plugin.json` points at `hooks/qoder-hooks.json`, which is a **template, not a ready-to-use config** — its own `_comment` field says so. To actually activate it: copy the `"hooks"` object from `hooks/qoder-hooks.json` into your `.qoder/settings.json` (or `~/.qoder/settings.json`), replacing `INSTINCT_DIR` with the absolute path to this checkout. This manual substitution step is real and currently has no automation — a `scripts/render_qoder_hooks.py` that takes a path and writes a ready-to-paste config would remove it; not built, since nobody has hit this friction yet outside of writing this doc.
+`.qoder-plugin/plugin.json` points at `hooks/qoder-hooks.json`, which is a **template, not a ready-to-use config** — its own `_comment` field says so. Run:
+```bash
+python scripts/render_qoder_hooks.py /absolute/path/to/this/checkout
+```
+and paste the printed `"hooks"` object into your `.qoder/settings.json` (or `~/.qoder/settings.json` for a global install). Omit the argument to use this checkout's own path. Handles both Unix- and Windows-style paths correctly — the naive version (string-substitute and hope) breaks on Windows, since `Path.resolve()`'s backslashes are invalid JSON escapes once substituted into the template; confirmed by actually hitting that crash while building this script, not by inspection.
 
 ## Gemini CLI
 

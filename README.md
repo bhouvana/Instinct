@@ -200,7 +200,7 @@ See [`docs/installation.md`](docs/installation.md) for exact steps per host,
 each one marked confirmed or inferred. Quick version for Claude Code:
 
 ```bash
-claude plugin marketplace add /path/to/this/checkout
+claude plugin marketplace add bhouvana/Instinct
 claude plugin install instinct@instinct
 ```
 
